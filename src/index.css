@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+:root {
+  font-family: 'Baloo 2', 'Segoe UI', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color-scheme: light;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  background: #FFFBF0;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+input, button, textarea, select {
+  font-family: 'Baloo 2', 'Segoe UI', system-ui, sans-serif;
+}
+
+button {
+  cursor: pointer;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
