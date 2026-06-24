@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { subscribeToPlayers } from '../firebase/gameService';
 import { formatScore } from '../lib/scoring';
 import type { Player } from '../types';
-import { MagnetizeButton } from '@/components/ui/magnetize-button';
 
 interface FinalLeaderboardPageProps {
   gameCode: string;
@@ -270,7 +269,7 @@ export default function FinalLeaderboardPage({
         transition={{ delay: 1, type: 'spring', stiffness: 260, damping: 22 }}
         style={{ zIndex: 1 }}
       >
-        <MagnetizeButton
+        <motion.button
           onClick={onPlayAgain}
           whileHover={{ scale: 1.03, y: -2 }}
           whileTap={{ scale: 0.97 }}
@@ -294,7 +293,7 @@ export default function FinalLeaderboardPage({
             <path d="M3 3v5h5" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           กลับหน้าหลัก
-        </MagnetizeButton>
+        </motion.button>
       </motion.div>
     </div>
   );

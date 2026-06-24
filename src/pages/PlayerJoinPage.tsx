@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { checkGame, joinGame } from '../firebase/gameService';
 import { generateId } from '../lib/utils';
 import MotionButton from '../components/ui/Button';
-import { MagnetizeButton } from '@/components/ui/magnetize-button';
 
 interface PlayerJoinPageProps {
   onJoined: (gameCode: string, playerId: string, nickname: string) => void;
@@ -73,7 +72,7 @@ export default function PlayerJoinPage({ onJoined, onBack }: PlayerJoinPageProps
           ...glass,
         }}
       >
-        <MagnetizeButton
+        <motion.button
           onClick={onBack}
           whileHover={{ x: -3 }}
           style={{
@@ -92,7 +91,7 @@ export default function PlayerJoinPage({ onJoined, onBack }: PlayerJoinPageProps
             <path d="M19 12H5M12 5l-7 7 7 7" stroke="rgba(255,255,255,0.6)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           กลับ
-        </MagnetizeButton>
+        </motion.button>
 
         <h2 style={{ fontSize: 26, fontWeight: 800, color: '#fff', margin: '0 0 6px', letterSpacing: '-0.5px' }}>
           เข้าร่วมเกม

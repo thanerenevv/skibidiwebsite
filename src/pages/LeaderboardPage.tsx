@@ -11,7 +11,6 @@ import { formatScore } from '../lib/scoring';
 import { CHOICE_LABELS } from '../lib/utils';
 import type { Player, Game } from '../types';
 import MotionButton from '../components/ui/Button';
-import { MagnetizeButton } from '@/components/ui/magnetize-button';
 
 interface LeaderboardPageProps {
   gameCode: string;
@@ -321,12 +320,11 @@ export default function LeaderboardPage({
                 </svg>
                 {wheelCooldown > 0 ? `ข้อถัดไป (${wheelCooldown})` : 'ข้อถัดไป'}
               </MotionButton>
-              <MagnetizeButton
+              <motion.button
                 onClick={handleEndGame}
                 disabled={advancing}
                 whileHover={!advancing ? { scale: 1.03, y: -1 } : {}}
                 whileTap={!advancing ? { scale: 0.97 } : {}}
-                particleColor="rgba(252,165,165,0.7)"
                 style={{
                   background: 'rgba(239,68,68,0.2)',
                   border: '1px solid rgba(239,68,68,0.4)',
@@ -342,7 +340,7 @@ export default function LeaderboardPage({
                 }}
               >
                 จบเกม
-              </MagnetizeButton>
+              </motion.button>
             </>
           ) : (
             <MotionButton

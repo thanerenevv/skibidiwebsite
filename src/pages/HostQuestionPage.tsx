@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MagnetizeButton } from '@/components/ui/magnetize-button';
 import {
   subscribeToGame,
   subscribeToPlayers,
@@ -338,7 +337,7 @@ export default function HostQuestionPage({
         transition={{ delay: 0.3 }}
         style={{ display: 'flex', gap: 12 }}
       >
-        <MagnetizeButton
+        <motion.button
           onClick={handleShowLeaderboard}
           disabled={advancing}
           whileHover={!advancing ? { scale: 1.02, y: -1 } : {}}
@@ -361,13 +360,12 @@ export default function HostQuestionPage({
             <path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           Show Results
-        </MagnetizeButton>
-        <MagnetizeButton
+        </motion.button>
+        <motion.button
           onClick={handleEndGame}
           disabled={advancing}
           whileHover={!advancing ? { scale: 1.02, y: -1 } : {}}
           whileTap={!advancing ? { scale: 0.98 } : {}}
-          particleColor="rgba(252,165,165,0.7)"
           style={{
             background: 'rgba(239,68,68,0.2)',
             border: '1px solid rgba(239,68,68,0.4)',
@@ -383,7 +381,7 @@ export default function HostQuestionPage({
           }}
         >
           End Game
-        </MagnetizeButton>
+        </motion.button>
       </motion.div>
     </div>
   );

@@ -1,6 +1,5 @@
 import { motion, type Variants } from 'framer-motion';
 import { LiquidButton } from '@/components/ui/liquid-glass-button';
-import { MagnetizeButton } from '@/components/ui/magnetize-button';
 
 interface HomePageProps {
   onHostGame: () => void;
@@ -107,7 +106,7 @@ export default function HomePage({ onHostGame, onJoinGame }: HomePageProps) {
             เข้าร่วมเกม
           </LiquidButton>
 
-          <MagnetizeButton
+          <motion.button
             onClick={onHostGame}
             whileHover={{ scale: 1.03, y: -2 }}
             whileTap={{ scale: 0.97 }}
@@ -133,7 +132,7 @@ export default function HomePage({ onHostGame, onJoinGame }: HomePageProps) {
               <path d="M8 21h8M12 17v4" stroke="rgba(255,255,255,0.85)" strokeWidth="2.2" strokeLinecap="round"/>
             </svg>
             จัดเกม
-          </MagnetizeButton>
+          </motion.button>
         </motion.div>
 
         {/* Stat pills */}

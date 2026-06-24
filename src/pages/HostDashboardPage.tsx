@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MagnetizeButton } from '@/components/ui/magnetize-button';
 import { createGame, subscribeToPlayers, startGame } from '../firebase/gameService';
 import { generateGameCode, generateId } from '../lib/utils';
 import { QUESTIONS } from '../data/questions';
@@ -111,7 +110,7 @@ export default function HostDashboardPage({ onGameStarted, onBack }: HostDashboa
         transition={{ type: 'spring', stiffness: 260, damping: 22 }}
         style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 8 }}
       >
-        <MagnetizeButton
+        <motion.button
           onClick={onBack}
           whileHover={{ x: -3 }}
           style={{
@@ -129,7 +128,7 @@ export default function HostDashboardPage({ onGameStarted, onBack }: HostDashboa
             <path d="M19 12H5M12 5l-7 7 7 7" stroke="rgba(255,255,255,0.6)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           กลับ
-        </MagnetizeButton>
+        </motion.button>
         <div style={{ flex: 1 }} />
         <div
           style={{
@@ -237,7 +236,7 @@ export default function HostDashboardPage({ onGameStarted, onBack }: HostDashboa
               {gameCode}
             </motion.div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-              <MagnetizeButton
+              <motion.button
                 onClick={handleCopyCode}
                 whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                 style={{
@@ -261,8 +260,8 @@ export default function HostDashboardPage({ onGameStarted, onBack }: HostDashboa
                   )}
                 </AnimatePresence>
                 {copied ? 'คัดลอกแล้ว!' : 'คัดลอก'}
-              </MagnetizeButton>
-              <MagnetizeButton
+              </motion.button>
+              <motion.button
                 onClick={handleNewGame}
                 whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                 style={{
@@ -274,7 +273,7 @@ export default function HostDashboardPage({ onGameStarted, onBack }: HostDashboa
                 }}
               >
                 เกมใหม่
-              </MagnetizeButton>
+              </motion.button>
             </div>
           </motion.div>
 
