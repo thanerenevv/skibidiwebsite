@@ -67,33 +67,6 @@ export default function HomePage({ onHostGame, onJoinGame }: HomePageProps) {
       {/* Content */}
       <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 480, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 36 }}>
 
-        {/* Floating icon */}
-        <motion.div
-          initial={{ scale: 0, rotate: -30, opacity: 0 }}
-          animate={{ scale: 1, rotate: 0, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 180, damping: 13, delay: 0.05 }}
-        >
-          <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-            style={{
-              width: 88,
-              height: 88,
-              borderRadius: 28,
-              background: 'linear-gradient(135deg, rgba(99,102,241,0.35) 0%, rgba(168,85,247,0.35) 100%)',
-              border: '1.5px solid rgba(255,255,255,0.18)',
-              backdropFilter: 'blur(16px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 12px 40px rgba(99,102,241,0.35), 0 0 0 1px rgba(255,255,255,0.08) inset',
-              fontSize: 40,
-            }}
-          >
-            ⚖️
-          </motion.div>
-        </motion.div>
-
         {/* Title block */}
         <motion.div
           initial={{ opacity: 0, y: 32 }}
@@ -274,39 +247,6 @@ export default function HomePage({ onHostGame, onJoinGame }: HomePageProps) {
               <path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </motion.button>
-        </motion.div>
-
-        {/* Stat pills */}
-        <motion.div
-          style={{ display: 'flex', gap: 10, width: '100%' }}
-        >
-          {[
-            { icon: '❓', value: '15', label: 'คำถาม', delay: 0.52 },
-            { icon: '⏱', value: '30 วิ', label: 'ต่อข้อ', delay: 0.62 },
-            { icon: '🏆', value: '1,500', label: 'คะแนนสูงสุด', delay: 0.72 },
-          ].map((stat) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: stat.delay, type: 'spring', stiffness: 260, damping: 20 }}
-              style={{
-                flex: 1,
-                textAlign: 'center',
-                padding: '14px 6px',
-                background: 'rgba(255,255,255,0.055)',
-                borderRadius: 16,
-                border: '1px solid rgba(255,255,255,0.1)',
-                backdropFilter: 'blur(12px)',
-              }}
-            >
-              <div style={{ fontSize: 18, marginBottom: 5 }}>{stat.icon}</div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>{stat.value}</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', fontWeight: 600, marginTop: 2, letterSpacing: '0.3px' }}>
-                {stat.label}
-              </div>
-            </motion.div>
-          ))}
         </motion.div>
 
       </div>
