@@ -197,13 +197,22 @@ export function subscribeToGame(
   });
 }
 
+export async function leaveGame(gameCode: string, playerId: string): Promise<void> {
+  await withTimeout(
+    updateDoc(playerRef(gameCode, playerId), { left: true }),
+    10000,
+  );
+}
+
 export function subscribeToPlayers(
   gameCode: string,
   cb: (players: Player[]) => void,
 ): Unsubscribe {
   const q = query(playersCol(gameCode), orderBy('score', 'desc'));
   return onSnapshot(q, (snap) => {
-    const players = snap.docs.map((d) => d.data() as Player);
+    const players = snap.docs
+      .map((d) => d.data() as Player)
+      .filter((p) => !p.left);
     cb(players);
   }, (err) => {
     console.error('subscribeToPlayers error:', err);

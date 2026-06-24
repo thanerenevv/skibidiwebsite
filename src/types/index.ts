@@ -16,6 +16,7 @@ export interface Player {
   nickname: string;
   score: number;
   joinedAt: number;
+  left?: boolean;
 }
 
 export interface Answer {

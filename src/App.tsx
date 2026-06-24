@@ -99,15 +99,20 @@ export default function App() {
         </PageWrap>
       )}
 
-      {view === 'player-waiting' && gameCode && playerNickname && (
+      {view === 'player-waiting' && gameCode && playerId && playerNickname && (
         <PageWrap id="player-waiting">
           <PlayerWaitingPage
             gameCode={gameCode}
             nickname={playerNickname}
+            playerId={playerId}
             onGameStarted={() => navigate('player-question')}
             onGameEnded={() => {
               localStorage.removeItem('quiztime_player');
               navigate('home');
+            }}
+            onLeave={() => {
+              localStorage.removeItem('quiztime_player');
+              navigate('home', { gameCode: null, playerId: null, playerNickname: null });
             }}
           />
         </PageWrap>

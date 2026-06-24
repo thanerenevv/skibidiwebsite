@@ -1,15 +1,19 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { subscribeToGame } from '../firebase/gameService';
+import { subscribeToGame, leaveGame } from '../firebase/gameService';
 
 interface PlayerWaitingPageProps {
   gameCode: string;
   nickname: string;
+  playerId: string;
   onGameStarted: () => void;
   onGameEnded: () => void;
+  onLeave: () => void;
 }
 
-export default function PlayerWaitingPage({ gameCode, nickname, onGameStarted, onGameEnded }: PlayerWaitingPageProps) {
+export default function PlayerWaitingPage({ gameCode, nickname, playerId, onGameStarted, onGameEnded, onLeave }: PlayerWaitingPageProps) {
+  const [leaving, setLeaving] = useState(false);
+
   useEffect(() => {
     const unsub = subscribeToGame(gameCode, (game) => {
       if (!game) return;
@@ -18,6 +22,17 @@ export default function PlayerWaitingPage({ gameCode, nickname, onGameStarted, o
     });
     return unsub;
   }, [gameCode, onGameStarted, onGameEnded]);
+
+  async function handleLeave() {
+    if (leaving) return;
+    setLeaving(true);
+    try {
+      await leaveGame(gameCode, playerId);
+    } catch {
+      // Even if the update fails, still clear local state and go home
+    }
+    onLeave();
+  }
 
   const dots = [0, 1, 2, 3];
 
@@ -130,6 +145,43 @@ export default function PlayerWaitingPage({ gameCode, nickname, onGameStarted, o
       >
         หน้าจอจะเปลี่ยนอัตโนมัติเมื่อผู้จัดเริ่มเกม
       </motion.p>
+
+      <motion.button
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.7 }}
+        onClick={handleLeave}
+        disabled={leaving}
+        whileHover={!leaving ? { scale: 1.04 } : {}}
+        whileTap={!leaving ? { scale: 0.96 } : {}}
+        style={{
+          background: 'rgba(239,68,68,0.12)',
+          border: '1px solid rgba(239,68,68,0.3)',
+          borderRadius: 12,
+          padding: '12px 28px',
+          color: leaving ? 'rgba(252,165,165,0.5)' : '#FCA5A5',
+          fontSize: 14,
+          fontWeight: 700,
+          cursor: leaving ? 'not-allowed' : 'pointer',
+          fontFamily: 'inherit',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
+        {leaving ? (
+          <motion.span
+            animate={{ rotate: 360 }}
+            transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+            style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(252,165,165,0.3)', borderTopColor: '#FCA5A5', borderRadius: '50%' }}
+          />
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="#FCA5A5" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        )}
+        {leaving ? 'กำลังออก...' : 'ออกจากห้อง'}
+      </motion.button>
     </div>
   );
 }
