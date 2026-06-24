@@ -41,17 +41,29 @@ function answerRef(gameCode: string, questionIndex: number, playerId: string) {
   return doc(db, GAMES_COL, gameCode, 'answers', `${questionIndex}_${playerId}`);
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Firebase operation timed out')), ms)
+    ),
+  ]);
+}
+
 export async function createGame(hostId: string, gameCode: string): Promise<void> {
-  await setDoc(gameRef(gameCode), {
-    code: gameCode,
-    status: 'waiting' as GameStatus,
-    currentQuestionIndex: 0,
-    questionStartTime: null,
-    questionDuration: QUESTION_DURATION_SECONDS,
-    hostId,
-    createdAt: Date.now(),
-    totalQuestions: QUESTIONS.length,
-  });
+  await withTimeout(
+    setDoc(gameRef(gameCode), {
+      code: gameCode,
+      status: 'waiting' as GameStatus,
+      currentQuestionIndex: 0,
+      questionStartTime: null,
+      questionDuration: QUESTION_DURATION_SECONDS,
+      hostId,
+      createdAt: Date.now(),
+      totalQuestions: QUESTIONS.length,
+    }),
+    10000,
+  );
 }
 
 export async function checkGame(
@@ -78,11 +90,14 @@ export async function joinGame(
 }
 
 export async function startGame(gameCode: string): Promise<void> {
-  await updateDoc(gameRef(gameCode), {
-    status: 'question' as GameStatus,
-    currentQuestionIndex: 0,
-    questionStartTime: Date.now(),
-  });
+  await withTimeout(
+    updateDoc(gameRef(gameCode), {
+      status: 'question' as GameStatus,
+      currentQuestionIndex: 0,
+      questionStartTime: Date.now(),
+    }),
+    10000,
+  );
 }
 
 export async function showLeaderboard(gameCode: string): Promise<void> {
@@ -190,6 +205,8 @@ export function subscribeToPlayers(
   return onSnapshot(q, (snap) => {
     const players = snap.docs.map((d) => d.data() as Player);
     cb(players);
+  }, (err) => {
+    console.error('subscribeToPlayers error:', err);
   });
 }
 
