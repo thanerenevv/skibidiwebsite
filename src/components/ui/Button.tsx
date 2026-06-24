@@ -2,8 +2,7 @@ import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import { motion, useAnimation } from 'framer-motion';
-import { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import type { ReactNode } from 'react';
 
 // ─── shadcn-compatible Button ─────────────────────────────────────────────────
@@ -115,30 +114,6 @@ export default function MotionButton({
   const v = variantStyles[variant];
   const s = sizeStyles[size];
 
-  const [particles, setParticles] = useState<{ id: number; x: number; y: number }[]>([]);
-  const particlesControl = useAnimation();
-
-  useEffect(() => {
-    setParticles(Array.from({ length: 8 }, (_, i) => ({
-      id: i,
-      x: (Math.random() - 0.5) * 280,
-      y: (Math.random() - 0.5) * 280,
-    })));
-  }, []);
-
-  const handleParticleStart = useCallback(async () => {
-    if (disabled || loading) return;
-    await particlesControl.start({ x: 0, y: 0, transition: { type: 'spring', stiffness: 50, damping: 10 } });
-  }, [particlesControl, disabled, loading]);
-
-  const handleParticleEnd = useCallback(async () => {
-    await particlesControl.start((i) => ({
-      x: particles[i]?.x ?? 0,
-      y: particles[i]?.y ?? 0,
-      transition: { type: 'spring', stiffness: 100, damping: 15 },
-    }));
-  }, [particlesControl, particles]);
-
   return (
     <motion.button
       type={type}
@@ -147,10 +122,6 @@ export default function MotionButton({
       whileHover={!disabled && !loading ? { scale: 1.03, y: -1 } : {}}
       whileTap={!disabled && !loading ? { scale: 0.97 } : {}}
       transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-      onMouseEnter={handleParticleStart}
-      onMouseLeave={handleParticleEnd}
-      onTouchStart={handleParticleStart}
-      onTouchEnd={handleParticleEnd}
       style={{
         ...v,
         ...s,
@@ -169,34 +140,15 @@ export default function MotionButton({
         userSelect: 'none',
       }}
     >
-      {particles.map((_, i) => (
-        <motion.div
-          key={i}
-          custom={i}
-          initial={{ x: particles[i]?.x ?? 0, y: particles[i]?.y ?? 0 }}
-          animate={particlesControl}
-          style={{
-            position: 'absolute',
-            width: 5,
-            height: 5,
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.55)',
-            pointerEvents: 'none',
-            zIndex: 0,
-          }}
+      {loading ? (
+        <motion.span
+          animate={{ rotate: 360 }}
+          transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+          style={{ display: 'inline-block', width: 18, height: 18, border: '2.5px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%' }}
         />
-      ))}
-      <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-        {loading ? (
-          <motion.span
-            animate={{ rotate: 360 }}
-            transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
-            style={{ display: 'inline-block', width: 18, height: 18, border: '2.5px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%' }}
-          />
-        ) : (
-          children
-        )}
-      </span>
+      ) : (
+        children
+      )}
     </motion.button>
   );
 }

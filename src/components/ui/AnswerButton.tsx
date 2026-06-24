@@ -1,5 +1,4 @@
-import { motion, useAnimation } from 'framer-motion';
-import { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { CHOICE_COLORS, CHOICE_LABELS } from '../../lib/utils';
 
 interface AnswerButtonProps {
@@ -18,31 +17,12 @@ export default function AnswerButton({
   state = 'default',
 }: AnswerButtonProps) {
   const color = CHOICE_COLORS[index];
-
-  const [particles, setParticles] = useState<{ id: number; x: number; y: number }[]>([]);
-  const particlesControl = useAnimation();
-  useEffect(() => {
-    setParticles(Array.from({ length: 8 }, (_, i) => ({
-      id: i, x: (Math.random() - 0.5) * 280, y: (Math.random() - 0.5) * 280,
-    })));
-  }, []);
-  const handleParticleStart = useCallback(async () => {
-    if (disabled) return;
-    await particlesControl.start({ x: 0, y: 0, transition: { type: 'spring', stiffness: 50, damping: 10 } });
-  }, [particlesControl, disabled]);
-  const handleParticleEnd = useCallback(async () => {
-    await particlesControl.start((i) => ({
-      x: particles[i]?.x ?? 0, y: particles[i]?.y ?? 0,
-      transition: { type: 'spring', stiffness: 100, damping: 15 },
-    }));
-  }, [particlesControl, particles]);
   const label = CHOICE_LABELS[index];
 
   const getBg = () => {
     if (state === 'correct' || state === 'reveal-correct') return '#22C55E';
     if (state === 'wrong') return '#EF4444';
     if (state === 'reveal-wrong') return '#94A3B8';
-    if (state === 'selected') return color.bg;
     return color.bg;
   };
 
@@ -57,10 +37,6 @@ export default function AnswerButton({
     <motion.button
       onClick={onClick}
       disabled={disabled}
-      onMouseEnter={handleParticleStart}
-      onMouseLeave={handleParticleEnd}
-      onTouchStart={handleParticleStart}
-      onTouchEnd={handleParticleEnd}
       initial={{ opacity: 0, scale: 0.9, y: 20 }}
       animate={{
         opacity: getOpacity(),
@@ -88,15 +64,6 @@ export default function AnswerButton({
         minHeight: 72,
       }}
     >
-      {particles.map((_, i) => (
-        <motion.div
-          key={i}
-          custom={i}
-          initial={{ x: particles[i]?.x ?? 0, y: particles[i]?.y ?? 0 }}
-          animate={particlesControl}
-          style={{ position: 'absolute', width: 5, height: 5, borderRadius: '50%', background: 'rgba(255,255,255,0.55)', pointerEvents: 'none', zIndex: 0 }}
-        />
-      ))}
       <motion.div
         animate={{
           rotate: state === 'correct' || state === 'reveal-correct' ? [0, -10, 10, 0] : 0,

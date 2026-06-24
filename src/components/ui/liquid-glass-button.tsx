@@ -2,8 +2,6 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
-import { motion, useAnimation } from "framer-motion"
-import { useState, useEffect, useCallback } from "react"
 
 const liquidbuttonVariants = cva(
   "inline-flex items-center transition-colors justify-center cursor-pointer gap-2 whitespace-nowrap rounded-md text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none",
@@ -55,10 +53,6 @@ function LiquidButton({
   size,
   asChild = false,
   children,
-  onMouseEnter,
-  onMouseLeave,
-  onTouchStart,
-  onTouchEnd,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof liquidbuttonVariants> & {
@@ -66,42 +60,12 @@ function LiquidButton({
   }) {
   const Comp = asChild ? Slot : "button"
 
-  const [particles, setParticles] = useState<{ id: number; x: number; y: number }[]>([])
-  const particlesControl = useAnimation()
-  useEffect(() => {
-    setParticles(Array.from({ length: 8 }, (_, i) => ({
-      id: i, x: (Math.random() - 0.5) * 280, y: (Math.random() - 0.5) * 280,
-    })))
-  }, [])
-  const handleStart = useCallback(async () => {
-    await particlesControl.start({ x: 0, y: 0, transition: { type: 'spring', stiffness: 50, damping: 10 } })
-  }, [particlesControl])
-  const handleEnd = useCallback(async () => {
-    await particlesControl.start((i) => ({
-      x: particles[i]?.x ?? 0, y: particles[i]?.y ?? 0,
-      transition: { type: 'spring', stiffness: 100, damping: 15 },
-    }))
-  }, [particlesControl, particles])
-
   return (
     <Comp
       data-slot="button"
       className={cn("relative", liquidbuttonVariants({ variant, size, className }))}
-      onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => { handleStart(); onMouseEnter?.(e) }}
-      onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => { handleEnd(); onMouseLeave?.(e) }}
-      onTouchStart={(e: React.TouchEvent<HTMLButtonElement>) => { handleStart(); onTouchStart?.(e) }}
-      onTouchEnd={(e: React.TouchEvent<HTMLButtonElement>) => { handleEnd(); onTouchEnd?.(e) }}
       {...props}
     >
-      {particles.map((_, i) => (
-        <motion.div
-          key={i}
-          custom={i}
-          initial={{ x: particles[i]?.x ?? 0, y: particles[i]?.y ?? 0 }}
-          animate={particlesControl}
-          style={{ position: 'absolute', width: 5, height: 5, borderRadius: '50%', background: 'rgba(255,255,255,0.6)', pointerEvents: 'none', zIndex: 20 }}
-        />
-      ))}
       <div
         className="absolute top-0 left-0 z-0 h-full w-full rounded-full transition-all
           shadow-[0_0_6px_rgba(0,0,0,0.03),0_2px_6px_rgba(0,0,0,0.08),inset_3px_3px_0.5px_-3px_rgba(0,0,0,0.9),inset_-3px_-3px_0.5px_-3px_rgba(0,0,0,0.85),inset_1px_1px_1px_-0.5px_rgba(0,0,0,0.6),inset_-1px_-1px_1px_-0.5px_rgba(0,0,0,0.6),inset_0_0_6px_6px_rgba(0,0,0,0.12),inset_0_0_2px_2px_rgba(0,0,0,0.06),0_0_12px_rgba(255,255,255,0.15)]
