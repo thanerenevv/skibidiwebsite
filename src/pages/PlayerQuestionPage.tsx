@@ -44,6 +44,7 @@ export default function PlayerQuestionPage({
   const [isSkipping, setIsSkipping] = useState(false);
 
   const prevStatusRef = useRef<string | null>(null);
+  const pendingNavRef = useRef<'leaderboard' | 'finished' | null>(null);
   const handleLeaderboard = useCallback(onLeaderboard, []);
   const handleFinished = useCallback(onGameFinished, []);
 
@@ -52,9 +53,17 @@ export default function PlayerQuestionPage({
     const status = game.status;
     if (prevStatusRef.current === status) return;
     prevStatusRef.current = status;
-    if (status === 'leaderboard') handleLeaderboard();
-    if (status === 'finished') handleFinished();
-  }, [game, handleLeaderboard, handleFinished]);
+
+    if (status === 'leaderboard' || status === 'finished') {
+      const nav = status === 'leaderboard' ? 'leaderboard' : 'finished';
+      if (showWheel) {
+        // Wheel is still spinning — defer navigation until it completes
+        pendingNavRef.current = nav;
+      } else {
+        nav === 'leaderboard' ? handleLeaderboard() : handleFinished();
+      }
+    }
+  }, [game, handleLeaderboard, handleFinished, showWheel]);
 
   useEffect(() => {
     const unsub = subscribeToGame(gameCode, setGame);
@@ -69,6 +78,17 @@ export default function PlayerQuestionPage({
   // Reset per-question state when question index advances
   useEffect(() => {
     if (game?.currentQuestionIndex === undefined) return;
+
+    // If the host moved to the next question while the wheel was still running,
+    // flush the pending navigation now so the player lands on the leaderboard
+    // (which will immediately forward them to the next question).
+    const pending = pendingNavRef.current;
+    if (pending) {
+      pendingNavRef.current = null;
+      pending === 'leaderboard' ? handleLeaderboard() : handleFinished();
+      return;
+    }
+
     setAnswer(null);
     setPointsEarned(null);
     setSubmitting(false);
@@ -81,7 +101,7 @@ export default function PlayerQuestionPage({
     } else {
       setIsSkipping(false);
     }
-  }, [game?.currentQuestionIndex]);
+  }, [game?.currentQuestionIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Subscribe to this player's answer for current question
   useEffect(() => {
@@ -125,6 +145,14 @@ export default function PlayerQuestionPage({
       willSkipNextRef.current = true;
     } else if (penaltyAmount > 0) {
       await applyScorePenalty(gameCode, playerId, penaltyAmount);
+    }
+
+    // If the game already moved to leaderboard/finished while the wheel was
+    // running, execute the deferred navigation now that penalty is applied.
+    const pending = pendingNavRef.current;
+    if (pending) {
+      pendingNavRef.current = null;
+      pending === 'leaderboard' ? handleLeaderboard() : handleFinished();
     }
   }
 

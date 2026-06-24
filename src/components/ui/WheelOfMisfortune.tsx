@@ -133,7 +133,7 @@ export default function WheelOfMisfortune({ playerScore, onComplete }: WheelOfMi
             textAlign: 'center',
           }}
         >
-          🎡 WHEEL OF MISFORTUNE
+          🎡 วงล้อแห่งโชคร้าย
         </motion.div>
 
         {/* Wheel + pointer wrapper */}

@@ -34,6 +34,7 @@ export default function LeaderboardPage({
   const [game, setGame] = useState<Game | null>(null);
   const [advancing, setAdvancing] = useState(false);
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
+  const [wheelCooldown, setWheelCooldown] = useState(8);
 
   const handleNext = useCallback(onNextQuestion, []);
   const handleFinish = useCallback(onGameFinished, []);
@@ -57,6 +58,19 @@ export default function LeaderboardPage({
     const t = setTimeout(() => setShowCorrectAnswer(true), 400);
     return () => clearTimeout(t);
   }, []);
+
+  // Give players' wheels time to finish before the host can advance
+  useEffect(() => {
+    if (!isHost) return;
+    setWheelCooldown(8);
+    const interval = setInterval(() => {
+      setWheelCooldown((prev) => {
+        if (prev <= 1) { clearInterval(interval); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isHost]);
 
   async function handleNextQuestion() {
     if (!game || advancing) return;
@@ -298,14 +312,14 @@ export default function LeaderboardPage({
               <MotionButton
                 onClick={handleNextQuestion}
                 loading={advancing}
-                disabled={advancing}
+                disabled={advancing || wheelCooldown > 0}
                 fullWidth
                 size="lg"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                ข้อถัดไป
+                {wheelCooldown > 0 ? `ข้อถัดไป (${wheelCooldown})` : 'ข้อถัดไป'}
               </MotionButton>
               <MagnetizeButton
                 onClick={handleEndGame}
