@@ -45,6 +45,11 @@ export default function PlayerQuestionPage({
 
   const prevStatusRef = useRef<string | null>(null);
   const pendingNavRef = useRef<'leaderboard' | 'finished' | null>(null);
+  // Mirror showWheel into a ref so the status effect can read it without
+  // adding it to its dep array (which would cause spurious re-runs).
+  const showWheelRef = useRef(false);
+  showWheelRef.current = showWheel;
+
   const handleLeaderboard = useCallback(onLeaderboard, []);
   const handleFinished = useCallback(onGameFinished, []);
 
@@ -56,14 +61,14 @@ export default function PlayerQuestionPage({
 
     if (status === 'leaderboard' || status === 'finished') {
       const nav = status === 'leaderboard' ? 'leaderboard' : 'finished';
-      if (showWheel) {
-        // Wheel is still spinning — defer navigation until it completes
+      if (showWheelRef.current) {
+        // Wheel is still spinning — defer navigation until onComplete fires
         pendingNavRef.current = nav;
       } else {
         nav === 'leaderboard' ? handleLeaderboard() : handleFinished();
       }
     }
-  }, [game, handleLeaderboard, handleFinished, showWheel]);
+  }, [game, handleLeaderboard, handleFinished]);
 
   useEffect(() => {
     const unsub = subscribeToGame(gameCode, setGame);
@@ -156,16 +161,27 @@ export default function PlayerQuestionPage({
     }
   }
 
-  if (!game || game.status !== 'question') {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          style={{ width: 40, height: 40, border: '4px solid #E2E8F0', borderTopColor: '#2563EB', borderRadius: '50%' }}
-        />
-      </div>
-    );
+  const spinner = (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+        style={{ width: 40, height: 40, border: '4px solid #E2E8F0', borderTopColor: '#2563EB', borderRadius: '50%' }}
+      />
+    </div>
+  );
+
+  if (!game) return spinner;
+
+  // After the question phase ends, keep the wheel alive so it can finish
+  // and call handleWheelComplete (which applies the penalty and navigates).
+  if (game.status !== 'question') {
+    return showWheel ? (
+      <WheelOfMisfortune
+        playerScore={player?.score ?? 0}
+        onComplete={handleWheelComplete}
+      />
+    ) : spinner;
   }
 
   const question = QUESTIONS[game.currentQuestionIndex];
