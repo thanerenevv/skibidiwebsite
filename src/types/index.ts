@@ -56,4 +56,5 @@ export interface NavState {
   gameCode: string | null;
   playerId: string | null;
   playerNickname: string | null;
+  initialGameCode?: string | null;
 }

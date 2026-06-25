@@ -17,20 +17,21 @@ import {
 import type { Game } from '../types';
 
 interface PlayerJoinPageProps {
+  initialCode?: string;
   onJoined: (gameCode: string, playerId: string, nickname: string) => void;
   onBack: () => void;
 }
 
 type Tab = 'rooms' | 'code';
 
-export default function PlayerJoinPage({ onJoined, onBack }: PlayerJoinPageProps) {
+export default function PlayerJoinPage({ initialCode, onJoined, onBack }: PlayerJoinPageProps) {
   const [nickname, setNickname] = useState(
     () => localStorage.getItem('quiztime_nick') ?? '',
   );
-  const [tab, setTab] = useState<Tab>('rooms');
+  const [tab, setTab] = useState<Tab>(initialCode ? 'code' : 'rooms');
   const [rooms, setRooms] = useState<Game[]>([]);
   const [roomsLoading, setRoomsLoading] = useState(true);
-  const [manualCode, setManualCode] = useState('');
+  const [manualCode, setManualCode] = useState(initialCode ?? '');
   const [error, setError] = useState('');
   const [joiningCode, setJoiningCode] = useState<string | null>(null);
   const nickRef = useRef<HTMLInputElement>(null);

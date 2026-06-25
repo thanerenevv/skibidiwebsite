@@ -86,6 +86,7 @@ export default function App() {
           <HomePage
             onHostGame={() => navigate('host-dashboard')}
             onJoinGame={() => navigate('player-join')}
+            onJoinRoom={(code) => navigate('player-join', { initialGameCode: code })}
           />
         </PageWrap>
       )}
@@ -93,6 +94,7 @@ export default function App() {
       {view === 'player-join' && (
         <PageWrap id="player-join">
           <PlayerJoinPage
+            initialCode={nav.initialGameCode ?? undefined}
             onJoined={handlePlayerJoined}
             onBack={() => navigate('home')}
           />
