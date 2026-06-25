@@ -7,6 +7,10 @@ export interface Game {
   questionStartTime: number | null;
   questionDuration: number;
   hostId: string;
+  /** Display name for the host/room, shown in the public lobby. */
+  hostName?: string;
+  /** Best-effort count of active players, maintained on join/leave. */
+  playerCount?: number;
   createdAt: number;
   totalQuestions: number;
 }

@@ -25,6 +25,7 @@ export default function HostDashboardPage({ onGameStarted, onBack }: HostDashboa
     return generateId();
   });
   const [players, setPlayers] = useState<Player[]>([]);
+  const [roomName, setRoomName] = useState('');
   const [creating, setCreating] = useState(false);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState('');
@@ -51,7 +52,7 @@ export default function HostDashboardPage({ onGameStarted, onBack }: HostDashboa
     setError('');
     try {
       const code = generateGameCode();
-      await createGame(hostId, code);
+      await createGame(hostId, code, roomName.trim() || undefined);
       setGameCode(code);
       localStorage.setItem('quiztime_host', JSON.stringify({ hostId, gameCode: code }));
     } catch {
@@ -184,9 +185,42 @@ export default function HostDashboardPage({ onGameStarted, onBack }: HostDashboa
           <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>
             สร้างเกมใหม่
           </h3>
-          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', margin: '0 0 24px', fontWeight: 500 }}>
-            ระบบจะสร้างรหัสเกมสำหรับแชร์ให้ผู้เล่น
+          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', margin: '0 0 20px', fontWeight: 500 }}>
+            ตั้งชื่อห้องเพื่อให้ผู้เล่นเห็นในรายการห้องที่เปิดอยู่
           </p>
+
+          <div style={{ textAlign: 'left', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.6px' }}>
+                ชื่อห้อง / ชื่อผู้จัด
+              </label>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: 600 }}>{roomName.length}/24</span>
+            </div>
+            <input
+              type="text"
+              value={roomName}
+              onChange={(e) => setRoomName(e.target.value.slice(0, 24))}
+              onKeyDown={(e) => e.key === 'Enter' && !creating && handleCreateGame()}
+              placeholder="เช่น ห้องของอาจารย์, ทีม A"
+              style={{
+                width: '100%',
+                padding: '13px 15px',
+                border: '2px solid rgba(255,255,255,0.14)',
+                borderRadius: 12,
+                fontSize: 15,
+                fontWeight: 600,
+                outline: 'none',
+                fontFamily: 'inherit',
+                color: '#fff',
+                background: 'rgba(255,255,255,0.06)',
+                boxSizing: 'border-box',
+                transition: 'border-color 180ms',
+              }}
+              onFocus={(e) => (e.target.style.borderColor = 'rgba(139,92,246,0.75)')}
+              onBlur={(e) => (e.target.style.borderColor = 'rgba(255,255,255,0.14)')}
+            />
+          </div>
+
           {error && (
             <motion.div
               initial={{ opacity: 0, y: -8 }}
@@ -275,6 +309,28 @@ export default function HostDashboardPage({ onGameStarted, onBack }: HostDashboa
                 เกมใหม่
               </motion.button>
             </div>
+          </motion.div>
+
+          {/* Discoverable hint */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.12 }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '12px 16px',
+              borderRadius: 14,
+              background: 'rgba(34,197,94,0.1)',
+              border: '1px solid rgba(34,197,94,0.25)',
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+              <circle cx="12" cy="12" r="9" stroke="#4ADE80" strokeWidth="2" />
+              <path d="M8 12l2.5 2.5L16 9" stroke="#4ADE80" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span style={{ fontSize: 13, color: '#86EFAC', fontWeight: 600 }}>
+              ห้องนี้ปรากฏในรายการ “ห้องที่เปิดอยู่” ผู้เล่นเข้าร่วมได้ทันทีโดยไม่ต้องใช้รหัส
+            </span>
           </motion.div>
 
           {/* Players list */}
