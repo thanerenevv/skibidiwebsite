@@ -188,7 +188,7 @@ export default function HomePage({ onHostGame, onJoinGame }: HomePageProps) {
             <div style={{ textAlign: 'left', flex: 1 }}>
               <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>เข้าร่วมเกม</div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.68)', fontWeight: 500, marginTop: 3 }}>
-                กรอกรหัสเกมเพื่อเข้าร่วม
+                เลือกห้องที่เปิดอยู่ หรือกรอกรหัส
               </div>
             </div>
 

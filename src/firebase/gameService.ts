@@ -50,7 +50,11 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   ]);
 }
 
-export async function createGame(hostId: string, gameCode: string): Promise<void> {
+export async function createGame(
+  hostId: string,
+  gameCode: string,
+  hostName?: string,
+): Promise<void> {
   await withTimeout(
     setDoc(gameRef(gameCode), {
       code: gameCode,
@@ -59,9 +63,11 @@ export async function createGame(hostId: string, gameCode: string): Promise<void
       questionStartTime: null,
       questionDuration: QUESTION_DURATION_SECONDS,
       hostId,
+      hostName: hostName?.trim() || 'โฮสต์',
+      playerCount: 0,
       createdAt: Date.now(),
       totalQuestions: QUESTIONS.length,
-    }),
+    } satisfies Game),
     10000,
   );
 }
@@ -81,12 +87,22 @@ export async function joinGame(
   playerId: string,
   nickname: string,
 ): Promise<void> {
-  await setDoc(playerRef(gameCode, playerId), {
-    id: playerId,
-    nickname,
-    score: 0,
-    joinedAt: Date.now(),
-  });
+  await withTimeout(
+    runTransaction(db, async (txn) => {
+      const pRef = playerRef(gameCode, playerId);
+      const snap = await txn.get(pRef);
+      // Already an active player in this room — leave score/count untouched.
+      if (snap.exists() && !(snap.data() as Player).left) return;
+      txn.set(pRef, {
+        id: playerId,
+        nickname,
+        score: 0,
+        joinedAt: Date.now(),
+      } satisfies Player);
+      txn.update(gameRef(gameCode), { playerCount: increment(1) });
+    }),
+    10000,
+  );
 }
 
 export async function startGame(gameCode: string): Promise<void> {
@@ -199,8 +215,40 @@ export function subscribeToGame(
 
 export async function leaveGame(gameCode: string, playerId: string): Promise<void> {
   await withTimeout(
-    updateDoc(playerRef(gameCode, playerId), { left: true }),
+    runTransaction(db, async (txn) => {
+      const pRef = playerRef(gameCode, playerId);
+      const snap = await txn.get(pRef);
+      if (!snap.exists() || (snap.data() as Player).left) return;
+      txn.update(pRef, { left: true });
+      txn.update(gameRef(gameCode), { playerCount: increment(-1) });
+    }),
     10000,
+  );
+}
+
+/**
+ * Live list of rooms anyone can join (status === 'waiting'), newest first.
+ * Uses an equality-only query (no composite index required) and sorts/filters
+ * client-side; stale rooms left open for a long time are hidden automatically.
+ */
+export function subscribeToAvailableGames(
+  cb: (games: Game[]) => void,
+): Unsubscribe {
+  const q = query(collection(db, GAMES_COL), where('status', '==', 'waiting'));
+  return onSnapshot(
+    q,
+    (snap) => {
+      const cutoff = Date.now() - 12 * 60 * 60 * 1000; // hide rooms older than 12h
+      const games = snap.docs
+        .map((d) => d.data() as Game)
+        .filter((g) => (g.createdAt ?? 0) > cutoff)
+        .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+      cb(games);
+    },
+    (err) => {
+      console.error('subscribeToAvailableGames error:', err);
+      cb([]);
+    },
   );
 }
 
