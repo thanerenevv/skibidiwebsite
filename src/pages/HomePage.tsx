@@ -19,11 +19,28 @@ const orbs = [
 
 type Tab = 'home' | 'rooms';
 
+const TITLE = 'กฎหมายธุรกิจ';
+
 export default function HomePage({ onHostGame, onJoinGame, onJoinRoom }: HomePageProps) {
   const [tab, setTab] = useState<Tab>('home');
   const [rooms, setRooms] = useState<Game[]>([]);
   const [roomsLoading, setRoomsLoading] = useState(true);
   const [joiningCode, setJoiningCode] = useState<string | null>(null);
+
+  // Typing animation
+  const [displayText, setDisplayText] = useState('');
+  const [cursorVisible, setCursorVisible] = useState(true);
+  const [typingDone, setTypingDone] = useState(false);
+  const [showUnderline, setShowUnderline] = useState(false);
+
+  // Responsive: side-by-side on wide screens
+  const [isWide, setIsWide] = useState(() => window.innerWidth >= 700);
+
+  useEffect(() => {
+    const handler = () => setIsWide(window.innerWidth >= 700);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
 
   useEffect(() => {
     const unsub = subscribeToAvailableGames((games) => {
@@ -32,6 +49,45 @@ export default function HomePage({ onHostGame, onJoinGame, onJoinRoom }: HomePag
     });
     return unsub;
   }, []);
+
+  // Typewriter effect on mount
+  useEffect(() => {
+    setDisplayText('');
+    setTypingDone(false);
+    setCursorVisible(true);
+    setShowUnderline(false);
+
+    let i = 0;
+    const startDelay = setTimeout(() => {
+      const interval = setInterval(() => {
+        i++;
+        setDisplayText(TITLE.slice(0, i));
+        if (i >= TITLE.length) {
+          clearInterval(interval);
+          setTypingDone(true);
+          setTimeout(() => setShowUnderline(true), 120);
+        }
+      }, 85);
+      return () => clearInterval(interval);
+    }, 300);
+
+    return () => clearTimeout(startDelay);
+  }, []);
+
+  // Blink cursor a few times after typing, then hide it
+  useEffect(() => {
+    if (!typingDone) return;
+    let blinks = 0;
+    const interval = setInterval(() => {
+      setCursorVisible((v) => !v);
+      blinks++;
+      if (blinks >= 6) {
+        clearInterval(interval);
+        setCursorVisible(false);
+      }
+    }, 380);
+    return () => clearInterval(interval);
+  }, [typingDone]);
 
   function handleJoinRoom(code: string) {
     setJoiningCode(code);
@@ -45,63 +101,66 @@ export default function HomePage({ onHostGame, onJoinGame, onJoinRoom }: HomePag
         position: 'relative',
         overflow: 'hidden',
         display: 'flex',
-        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '32px 24px',
+        boxSizing: 'border-box',
       }}
     >
       {/* Animated background orbs */}
       {orbs.map((orb, i) => (
         <motion.div
           key={i}
-          animate={{
-            x: [0, 25, -15, 10, 0],
-            y: [0, -18, 24, -8, 0],
-            scale: [1, 1.08, 0.96, 1.04, 1],
-          }}
+          animate={{ x: [0, 25, -15, 10, 0], y: [0, -18, 24, -8, 0], scale: [1, 1.08, 0.96, 1.04, 1] }}
           transition={{ duration: orb.duration, delay: orb.delay, repeat: Infinity, ease: 'easeInOut' }}
           style={{
             position: 'fixed',
-            left: orb.left,
-            top: orb.top,
-            width: orb.size,
-            height: orb.size,
+            left: orb.left, top: orb.top,
+            width: orb.size, height: orb.size,
             borderRadius: '50%',
             background: `radial-gradient(circle, ${orb.color}, transparent 70%)`,
             filter: 'blur(48px)',
-            pointerEvents: 'none',
-            zIndex: 0,
+            pointerEvents: 'none', zIndex: 0,
           }}
         />
       ))}
 
-      {/* Subtle grid overlay */}
+      {/* Grid overlay */}
       <div
         style={{
-          position: 'fixed',
-          inset: 0,
+          position: 'fixed', inset: 0,
           backgroundImage:
             'linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)',
           backgroundSize: '48px 48px',
-          pointerEvents: 'none',
-          zIndex: 0,
+          pointerEvents: 'none', zIndex: 0,
         }}
       />
 
-      {/* Content */}
-      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 480, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28 }}>
-
-        {/* Title block */}
+      {/* Main layout */}
+      <div
+        style={{
+          position: 'relative', zIndex: 1,
+          width: '100%',
+          maxWidth: isWide ? 920 : 480,
+          display: 'flex',
+          flexDirection: isWide ? 'row' : 'column',
+          alignItems: isWide ? 'center' : 'stretch',
+          gap: isWide ? 60 : 28,
+        }}
+      >
+        {/* ── LEFT: Typing title ── */}
         <motion.div
-          initial={{ opacity: 0, y: 32 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: 'spring', stiffness: 220, damping: 20, delay: 0.18 }}
-          style={{ textAlign: 'center' }}
+          initial={{ opacity: 0, x: isWide ? -28 : 0, y: isWide ? 0 : 24 }}
+          animate={{ opacity: 1, x: 0, y: 0 }}
+          transition={{ type: 'spring', stiffness: 200, damping: 22, delay: 0.1 }}
+          style={{
+            flex: isWide ? '0 0 320px' : undefined,
+            textAlign: isWide ? 'left' : 'center',
+          }}
         >
           <h1
             style={{
-              fontSize: 'clamp(38px, 10vw, 64px)',
+              fontSize: isWide ? 'clamp(44px, 5vw, 72px)' : 'clamp(38px, 10vw, 64px)',
               fontWeight: 900,
               margin: 0,
               lineHeight: 1.04,
@@ -110,278 +169,278 @@ export default function HomePage({ onHostGame, onJoinGame, onJoinRoom }: HomePag
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
+              minHeight: '1.04em',
             }}
           >
-            กฎหมายธุรกิจ
+            {displayText}
+            {/* Blinking cursor */}
+            <span
+              style={{
+                display: 'inline-block',
+                width: 3,
+                height: '0.78em',
+                background: 'rgba(196,181,253,0.9)',
+                marginLeft: 4,
+                borderRadius: 2,
+                verticalAlign: 'middle',
+                opacity: cursorVisible ? 1 : 0,
+                transition: 'opacity 80ms',
+              }}
+            />
           </h1>
 
-          {/* Animated underline */}
+          {/* Underline sweeps in after typing finishes */}
           <motion.div
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: 0.5, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ scaleX: 0, opacity: 0 }}
+            animate={showUnderline ? { scaleX: 1, opacity: 1 } : { scaleX: 0, opacity: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             style={{
               height: 3,
               background: 'linear-gradient(90deg, #6366F1, #A855F7, #EC4899)',
               borderRadius: 2,
-              margin: '10px auto 12px',
-              width: '55%',
+              margin: isWide ? '12px 0 0' : '12px auto 0',
+              width: isWide ? '78%' : '55%',
               transformOrigin: 'left',
             }}
           />
 
+          {/* Subtle tag line */}
           <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.55 }}
+            initial={{ opacity: 0, y: 6 }}
+            animate={showUnderline ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+            transition={{ delay: 0.25, duration: 0.4 }}
             style={{
-              fontSize: 'clamp(14px, 3.5vw, 18px)',
-              fontWeight: 700,
-              color: 'rgba(255,255,255,0.55)',
-              margin: 0,
-              letterSpacing: '3px',
-              textTransform: 'uppercase',
+              fontSize: 13,
+              fontWeight: 600,
+              color: 'rgba(255,255,255,0.38)',
+              margin: '10px 0 0',
+              letterSpacing: '0.8px',
             }}
           >
-            Quiz Challenge
+            {rooms.length > 0 ? `${rooms.length} ห้องที่เปิดอยู่` : 'เกมกฎหมายธุรกิจ'}
           </motion.p>
         </motion.div>
 
-        {/* Tab bar */}
+        {/* ── RIGHT: Tabs + buttons ── */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.28, type: 'spring', stiffness: 240, damping: 22 }}
-          style={{
-            display: 'flex',
-            gap: 4,
-            padding: 4,
-            borderRadius: 16,
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            width: '100%',
-          }}
+          initial={{ opacity: 0, x: isWide ? 28 : 0, y: isWide ? 0 : 24 }}
+          animate={{ opacity: 1, x: 0, y: 0 }}
+          transition={{ type: 'spring', stiffness: 200, damping: 22, delay: 0.22 }}
+          style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}
         >
-          {([
-            { id: 'home' as Tab, label: 'หน้าหลัก' },
-            { id: 'rooms' as Tab, label: 'ห้องที่เปิดอยู่', badge: rooms.length },
-          ]).map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              style={{
-                position: 'relative',
-                flex: 1,
-                border: 'none',
-                background: 'transparent',
-                cursor: 'pointer',
-                padding: '11px 8px',
-                borderRadius: 12,
-                fontFamily: 'inherit',
-                fontSize: 14,
-                fontWeight: 700,
-                color: tab === t.id ? '#fff' : 'rgba(255,255,255,0.55)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 7,
-              }}
-            >
-              {tab === t.id && (
-                <motion.div
-                  layoutId="home-tab-pill"
-                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    borderRadius: 12,
-                    background: accentGradient,
-                    boxShadow: '0 6px 20px rgba(139,92,246,0.4)',
-                    zIndex: 0,
-                  }}
-                />
-              )}
-              <span style={{ position: 'relative', zIndex: 1 }}>{t.label}</span>
-              {'badge' in t && t.badge != null && t.badge > 0 && (
-                <span
-                  style={{
-                    position: 'relative',
-                    zIndex: 1,
-                    fontSize: 11,
-                    fontWeight: 800,
-                    minWidth: 18,
-                    height: 18,
-                    padding: '0 5px',
-                    borderRadius: 9,
+          {/* Tab bar */}
+          <div
+            style={{
+              display: 'flex', gap: 4, padding: 4,
+              borderRadius: 16,
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            {([
+              { id: 'home' as Tab, label: 'หน้าหลัก' },
+              { id: 'rooms' as Tab, label: 'ห้องที่เปิดอยู่', badge: rooms.length },
+            ]).map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                style={{
+                  position: 'relative', flex: 1,
+                  border: 'none', background: 'transparent',
+                  cursor: 'pointer', padding: '11px 8px', borderRadius: 12,
+                  fontFamily: 'inherit', fontSize: 14, fontWeight: 700,
+                  color: tab === t.id ? '#fff' : 'rgba(255,255,255,0.55)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                }}
+              >
+                {tab === t.id && (
+                  <motion.div
+                    layoutId="home-tab-pill"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    style={{
+                      position: 'absolute', inset: 0, borderRadius: 12,
+                      background: accentGradient,
+                      boxShadow: '0 6px 20px rgba(139,92,246,0.4)', zIndex: 0,
+                    }}
+                  />
+                )}
+                <span style={{ position: 'relative', zIndex: 1 }}>{t.label}</span>
+                {'badge' in t && t.badge != null && t.badge > 0 && (
+                  <span style={{
+                    position: 'relative', zIndex: 1,
+                    fontSize: 11, fontWeight: 800,
+                    minWidth: 18, height: 18, padding: '0 5px', borderRadius: 9,
                     background: tab === t.id ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)',
                     color: '#fff',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {t.badge}
-                </span>
-              )}
-            </button>
-          ))}
-        </motion.div>
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {t.badge}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
 
-        {/* Tab content */}
-        <AnimatePresence mode="wait">
-          {tab === 'home' ? (
-            <motion.div
-              key="home"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.2 }}
-              style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%' }}
-            >
-              {/* Join — primary */}
-              <motion.button
-                onClick={onJoinGame}
-                whileHover={{ scale: 1.025, y: -5 }}
-                whileTap={{ scale: 0.975 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 18 }}
-                style={{
-                  background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 55%, #A855F7 100%)',
-                  border: 'none',
-                  borderRadius: 22,
-                  padding: '26px 28px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 18,
-                  cursor: 'pointer',
-                  boxShadow: '0 10px 40px rgba(99,102,241,0.5), 0 0 0 1px rgba(255,255,255,0.12) inset',
-                  width: '100%',
-                  fontFamily: 'inherit',
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
+          {/* Tab content */}
+          <AnimatePresence mode="wait">
+            {tab === 'home' ? (
+              <motion.div
+                key="home"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.2 }}
+                style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
               >
-                {/* Sweeping shine */}
+                {/* Join — primary */}
                 <motion.div
-                  animate={{ x: ['-120%', '220%'] }}
-                  transition={{ duration: 2.8, repeat: Infinity, repeatDelay: 2.5, ease: 'easeInOut' }}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '45%',
-                    height: '100%',
-                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)',
-                    pointerEvents: 'none',
-                  }}
-                />
-
-                <div
-                  style={{
-                    width: 54,
-                    height: 54,
-                    borderRadius: 15,
-                    background: 'rgba(255,255,255,0.22)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
+                  initial={{ opacity: 0, x: 24 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.32, type: 'spring', stiffness: 260, damping: 22 }}
                 >
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#fff" strokeWidth="2.3" strokeLinecap="round"/>
-                    <circle cx="9" cy="7" r="4" stroke="#fff" strokeWidth="2.3"/>
-                    <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#fff" strokeWidth="2.3" strokeLinecap="round"/>
-                  </svg>
-                </div>
+                  <motion.button
+                    onClick={onJoinGame}
+                    whileHover={{ scale: 1.03, y: -6 }}
+                    whileTap={{ scale: 0.975 }}
+                    transition={{ type: 'spring', stiffness: 380, damping: 18 }}
+                    style={{
+                      background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 55%, #A855F7 100%)',
+                      border: 'none', borderRadius: 22,
+                      padding: '26px 28px',
+                      display: 'flex', alignItems: 'center', gap: 18,
+                      cursor: 'pointer',
+                      boxShadow: '0 10px 40px rgba(99,102,241,0.5), 0 0 0 1px rgba(255,255,255,0.12) inset',
+                      width: '100%', fontFamily: 'inherit',
+                      position: 'relative', overflow: 'hidden',
+                    }}
+                  >
+                    {/* Sweeping shine */}
+                    <motion.div
+                      animate={{ x: ['-120%', '220%'] }}
+                      transition={{ duration: 2.6, repeat: Infinity, repeatDelay: 2.8, ease: 'easeInOut' }}
+                      style={{
+                        position: 'absolute', top: 0, left: 0,
+                        width: '45%', height: '100%',
+                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)',
+                        pointerEvents: 'none',
+                      }}
+                    />
+                    {/* Pulse glow ring */}
+                    <motion.div
+                      animate={{ scale: [1, 1.55, 1], opacity: [0.45, 0, 0.45] }}
+                      transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
+                      style={{
+                        position: 'absolute', inset: 0, borderRadius: 22,
+                        border: '2px solid rgba(139,92,246,0.7)',
+                        pointerEvents: 'none',
+                      }}
+                    />
 
-                <div style={{ textAlign: 'left', flex: 1 }}>
-                  <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>เข้าร่วมเกม</div>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.68)', fontWeight: 500, marginTop: 3 }}>
-                    เลือกห้องที่เปิดอยู่ หรือกรอกรหัส
-                  </div>
-                </div>
+                    <div style={{ width: 54, height: 54, borderRadius: 15, background: 'rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#fff" strokeWidth="2.3" strokeLinecap="round"/>
+                        <circle cx="9" cy="7" r="4" stroke="#fff" strokeWidth="2.3"/>
+                        <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#fff" strokeWidth="2.3" strokeLinecap="round"/>
+                      </svg>
+                    </div>
 
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, opacity: 0.75 }}>
-                  <path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </motion.button>
+                    <div style={{ textAlign: 'left', flex: 1 }}>
+                      <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>เข้าร่วมเกม</div>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.68)', fontWeight: 500, marginTop: 3 }}>
+                        เลือกห้องที่เปิดอยู่ หรือกรอกรหัส
+                      </div>
+                    </div>
 
-              {/* Host — glass */}
-              <motion.button
-                onClick={onHostGame}
-                whileHover={{ scale: 1.025, y: -5 }}
-                whileTap={{ scale: 0.975 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 18 }}
-                style={{
-                  background: 'rgba(255,255,255,0.07)',
-                  border: '1.5px solid rgba(255,255,255,0.18)',
-                  borderRadius: 22,
-                  padding: '26px 28px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 18,
-                  cursor: 'pointer',
-                  backdropFilter: 'blur(24px)',
-                  boxShadow: '0 4px 28px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.06) inset',
-                  width: '100%',
-                  fontFamily: 'inherit',
-                }}
+                    <motion.div
+                      animate={{ x: [0, 4, 0] }}
+                      transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+                    >
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.8 }}>
+                        <path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </motion.div>
+                  </motion.button>
+                </motion.div>
+
+                {/* Host — glass */}
+                <motion.div
+                  initial={{ opacity: 0, x: 24 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.44, type: 'spring', stiffness: 260, damping: 22 }}
+                >
+                  <motion.button
+                    onClick={onHostGame}
+                    whileHover={{ scale: 1.03, y: -6 }}
+                    whileTap={{ scale: 0.975 }}
+                    transition={{ type: 'spring', stiffness: 380, damping: 18 }}
+                    style={{
+                      background: 'rgba(255,255,255,0.07)',
+                      border: '1.5px solid rgba(255,255,255,0.18)',
+                      borderRadius: 22, padding: '26px 28px',
+                      display: 'flex', alignItems: 'center', gap: 18,
+                      cursor: 'pointer',
+                      backdropFilter: 'blur(24px)',
+                      boxShadow: '0 4px 28px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.06) inset',
+                      width: '100%', fontFamily: 'inherit',
+                      position: 'relative', overflow: 'hidden',
+                    }}
+                  >
+                    {/* Subtle shimmer on host button */}
+                    <motion.div
+                      animate={{ x: ['-120%', '220%'] }}
+                      transition={{ duration: 3.2, repeat: Infinity, repeatDelay: 4, ease: 'easeInOut', delay: 1.5 }}
+                      style={{
+                        position: 'absolute', top: 0, left: 0,
+                        width: '40%', height: '100%',
+                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent)',
+                        pointerEvents: 'none',
+                      }}
+                    />
+
+                    <div style={{ width: 54, height: 54, borderRadius: 15, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                        <rect x="2" y="3" width="20" height="14" rx="2" stroke="rgba(255,255,255,0.88)" strokeWidth="2.3"/>
+                        <path d="M8 21h8M12 17v4" stroke="rgba(255,255,255,0.88)" strokeWidth="2.3" strokeLinecap="round"/>
+                      </svg>
+                    </div>
+
+                    <div style={{ textAlign: 'left', flex: 1 }}>
+                      <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>จัดเกม</div>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.48)', fontWeight: 500, marginTop: 3 }}>
+                        สร้างห้องและเชิญผู้เล่น
+                      </div>
+                    </div>
+
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, opacity: 0.35 }}>
+                      <path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </motion.button>
+                </motion.div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="rooms"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.2 }}
               >
-                <div
-                  style={{
-                    width: 54,
-                    height: 54,
-                    borderRadius: 15,
-                    background: 'rgba(255,255,255,0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
-                >
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                    <rect x="2" y="3" width="20" height="14" rx="2" stroke="rgba(255,255,255,0.88)" strokeWidth="2.3"/>
-                    <path d="M8 21h8M12 17v4" stroke="rgba(255,255,255,0.88)" strokeWidth="2.3" strokeLinecap="round"/>
-                  </svg>
-                </div>
-
-                <div style={{ textAlign: 'left', flex: 1 }}>
-                  <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>จัดเกม</div>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.48)', fontWeight: 500, marginTop: 3 }}>
-                    สร้างห้องและเชิญผู้เล่น
-                  </div>
-                </div>
-
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, opacity: 0.35 }}>
-                  <path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </motion.button>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="rooms"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.2 }}
-              style={{ width: '100%' }}
-            >
-              <HomeRoomList
-                rooms={rooms}
-                loading={roomsLoading}
-                joiningCode={joiningCode}
-                onJoin={handleJoinRoom}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
+                <HomeRoomList
+                  rooms={rooms}
+                  loading={roomsLoading}
+                  joiningCode={joiningCode}
+                  onJoin={handleJoinRoom}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </div>
     </div>
   );
 }
 
-// ─── Room list for the home tab ───────────────────────────────────────────────
+// ─── Room list ────────────────────────────────────────────────────────────────
 
 function HomeRoomList({
   rooms,
@@ -401,12 +460,8 @@ function HomeRoomList({
           animate={{ rotate: 360 }}
           transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
           style={{
-            display: 'inline-block',
-            width: 28,
-            height: 28,
-            border: '3px solid rgba(255,255,255,0.25)',
-            borderTopColor: '#fff',
-            borderRadius: '50%',
+            display: 'inline-block', width: 28, height: 28,
+            border: '3px solid rgba(255,255,255,0.25)', borderTopColor: '#fff', borderRadius: '50%',
           }}
         />
         <p style={{ marginTop: 14, fontSize: 14, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
@@ -419,21 +474,13 @@ function HomeRoomList({
   if (rooms.length === 0) {
     return (
       <div style={{ ...glassCard, borderRadius: 20, padding: '40px 24px', textAlign: 'center' }}>
-        <div
-          style={{
-            width: 60, height: 60, borderRadius: 18, margin: '0 auto 16px',
-            background: 'rgba(255,255,255,0.06)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
-        >
+        <div style={{ width: 60, height: 60, borderRadius: 18, margin: '0 auto 16px', background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
             <path d="M3 9l9-6 9 6v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="rgba(255,255,255,0.4)" strokeWidth="1.8" strokeLinejoin="round" />
             <path d="M9 22V12h6v10" stroke="rgba(255,255,255,0.4)" strokeWidth="1.8" strokeLinejoin="round" />
           </svg>
         </div>
-        <h3 style={{ fontSize: 17, fontWeight: 800, color: '#fff', margin: '0 0 6px' }}>
-          ยังไม่มีห้องที่เปิดอยู่
-        </h3>
+        <h3 style={{ fontSize: 17, fontWeight: 800, color: '#fff', margin: '0 0 6px' }}>ยังไม่มีห้องที่เปิดอยู่</h3>
         <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', margin: 0, fontWeight: 500 }}>
           รอผู้จัดสร้างห้อง หรือไปที่ "เข้าร่วมเกม" แล้วกรอกรหัสเอง
         </p>
@@ -484,30 +531,15 @@ function HomeRoomCard({
       transition={{ type: 'spring', stiffness: 300, damping: 26, delay: Math.min(index * 0.04, 0.3) }}
       style={{ ...glassCard, borderRadius: 18, padding: 16, overflow: 'hidden' }}
     >
-      {/* Top: host + members */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div
-          style={{
-            width: 46, height: 46, borderRadius: 13, flexShrink: 0,
-            background: avatarColor(host),
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 20, fontWeight: 800, color: '#fff',
-            boxShadow: '0 4px 14px rgba(0,0,0,0.3)',
-          }}
-        >
+        <div style={{ width: 46, height: 46, borderRadius: 13, flexShrink: 0, background: avatarColor(host), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff', boxShadow: '0 4px 14px rgba(0,0,0,0.3)' }}>
           {host.charAt(0).toUpperCase()}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <span style={{ fontSize: 16, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {host}
-            </span>
+            <span style={{ fontSize: 16, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{host}</span>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-              <motion.span
-                animate={{ opacity: [1, 0.3, 1] }}
-                transition={{ duration: 1.8, repeat: Infinity }}
-                style={{ width: 7, height: 7, borderRadius: '50%', background: '#22C55E', display: 'inline-block' }}
-              />
+              <motion.span animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.8, repeat: Infinity }} style={{ width: 7, height: 7, borderRadius: '50%', background: '#22C55E', display: 'inline-block' }} />
               <span style={{ fontSize: 11, fontWeight: 700, color: '#4ADE80' }}>เปิดอยู่</span>
             </span>
           </div>
@@ -515,24 +547,14 @@ function HomeRoomCard({
             รหัส <span style={{ color: 'rgba(255,255,255,0.78)', letterSpacing: '1.5px', fontWeight: 800 }}>{room.code}</span>
           </div>
         </div>
-        <div
-          style={{
-            flexShrink: 0,
-            display: 'flex', flexDirection: 'column', alignItems: 'center',
-            background: 'rgba(255,255,255,0.06)',
-            borderRadius: 12, padding: '6px 12px',
-            border: '1px solid rgba(255,255,255,0.08)',
-          }}
-        >
+        <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(255,255,255,0.06)', borderRadius: 12, padding: '6px 12px', border: '1px solid rgba(255,255,255,0.08)' }}>
           <span style={{ fontSize: 18, fontWeight: 900, color: '#fff', lineHeight: 1 }}>{members}</span>
           <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>ผู้เล่น</span>
         </div>
       </div>
 
-      {/* Divider */}
       <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '14px 0 12px' }} />
 
-      {/* Bottom: meta + join */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
@@ -547,36 +569,21 @@ function HomeRoomCard({
           whileHover={!anyJoining ? { scale: 1.04 } : {}}
           whileTap={!anyJoining ? { scale: 0.96 } : {}}
           style={{
-            border: 'none',
-            borderRadius: 12,
-            padding: '11px 22px',
-            background: accentGradient,
-            color: '#fff',
-            fontSize: 14,
-            fontWeight: 800,
-            fontFamily: 'inherit',
+            border: 'none', borderRadius: 12, padding: '11px 22px',
+            background: accentGradient, color: '#fff',
+            fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
             cursor: anyJoining ? 'not-allowed' : 'pointer',
             boxShadow: '0 6px 18px rgba(139,92,246,0.4)',
             opacity: anyJoining && !joining ? 0.5 : 1,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 7,
-            minWidth: 104,
-            justifyContent: 'center',
+            display: 'inline-flex', alignItems: 'center', gap: 7,
+            minWidth: 104, justifyContent: 'center',
           }}
         >
           {joining ? (
             <motion.span
               animate={{ rotate: 360 }}
               transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
-              style={{
-                display: 'inline-block',
-                width: 18,
-                height: 18,
-                border: '2.5px solid rgba(255,255,255,0.35)',
-                borderTopColor: '#fff',
-                borderRadius: '50%',
-              }}
+              style={{ display: 'inline-block', width: 18, height: 18, border: '2.5px solid rgba(255,255,255,0.35)', borderTopColor: '#fff', borderRadius: '50%' }}
             />
           ) : (
             <>
