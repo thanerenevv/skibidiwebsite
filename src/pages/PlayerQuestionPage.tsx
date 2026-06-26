@@ -297,7 +297,7 @@ export default function PlayerQuestionPage({
             transition={{ duration: 0.3 }}
             style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%', position: 'relative' }}
           >
-            {question.choices.map((choice, i) => (
+            {question?.choices.map((choice, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, x: -20 }}
@@ -412,7 +412,7 @@ export default function PlayerQuestionPage({
               )}
               {!answer.isCorrect && (
                 <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: 500 }}>
-                  คำตอบที่ถูก: {CHOICE_LABELS[question.correctIndex]}
+                  คำตอบที่ถูก: {CHOICE_LABELS[question?.correctIndex ?? 0]}
                   {!penaltyApplied && !showWheel && (
                     <motion.span
                       animate={{ opacity: [1, 0.4, 1] }}
