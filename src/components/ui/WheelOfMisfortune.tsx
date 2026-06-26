@@ -21,12 +21,12 @@ const SEGMENTS: Array<{ type: WheelOutcome }> = [
   { type: 'lose50'  },
 ];
 
-const SEG_CONFIG: Record<WheelOutcome, { label: string; sub: string; bg: string; glow: string; resultGradient: string }> = {
-  lose25:  { label: '-25%',  sub: 'คะแนน',  bg: 'linear-gradient(160deg, #C2410C 0%, #F97316 100%)', glow: 'rgba(249,115,22,0.7)',   resultGradient: 'linear-gradient(135deg, #7C2D12, #EA580C)' },
-  lose50:  { label: '-50%',  sub: 'คะแนน',  bg: 'linear-gradient(160deg, #991B1B 0%, #EF4444 100%)', glow: 'rgba(239,68,68,0.7)',    resultGradient: 'linear-gradient(135deg, #7F1D1D, #DC2626)' },
-  lose100: { label: '-100',  sub: 'คะแนน',  bg: 'linear-gradient(160deg, #1E3A8A 0%, #3B82F6 100%)', glow: 'rgba(59,130,246,0.7)',   resultGradient: 'linear-gradient(135deg, #1E3A8A, #2563EB)' },
-  lose250: { label: '-250',  sub: 'คะแนน',  bg: 'linear-gradient(160deg, #701A75 0%, #D946EF 100%)', glow: 'rgba(217,70,239,0.7)',   resultGradient: 'linear-gradient(135deg, #701A75, #A21CAF)' },
-  skip:    { label: 'SKIP!', sub: 'ข้ามคำถาม', bg: 'linear-gradient(160deg, #4C1D95 0%, #8B5CF6 100%)', glow: 'rgba(139,92,246,0.7)', resultGradient: 'linear-gradient(135deg, #4C1D95, #7C3AED)' },
+const SEG_CONFIG: Record<WheelOutcome, { label: string; border: string; labelColor: string; glow: string; resultColor: string }> = {
+  lose25:  { label: '-25%',  border: '#F97316', labelColor: '#FB923C', glow: 'rgba(249,115,22,0.6)',  resultColor: '#FB923C' },
+  lose50:  { label: '-50%',  border: '#EF4444', labelColor: '#F87171', glow: 'rgba(239,68,68,0.6)',   resultColor: '#F87171' },
+  lose100: { label: '-100',  border: '#3B82F6', labelColor: '#60A5FA', glow: 'rgba(59,130,246,0.6)',  resultColor: '#60A5FA' },
+  lose250: { label: '-250',  border: '#D946EF', labelColor: '#E879F9', glow: 'rgba(217,70,239,0.6)',  resultColor: '#E879F9' },
+  skip:    { label: 'SKIP!', border: '#8B5CF6', labelColor: '#A78BFA', glow: 'rgba(139,92,246,0.6)', resultColor: '#A78BFA' },
 };
 
 const CARD_W = 148;
@@ -82,17 +82,10 @@ export default function WheelOfMisfortune({ playerScore, onComplete }: WheelOfMi
     return () => clearTimeout(t);
   }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const resultTitle =
-    outcome.type === 'skip'    ? 'ข้ามคำถามถัดไป!' :
-    outcome.type === 'lose25'  ? 'เสีย 25% คะแนน' :
-    outcome.type === 'lose50'  ? 'เสีย 50% คะแนน!!' :
-    outcome.type === 'lose100' ? 'เสีย 100 คะแนน!' :
-                                 'เสีย 250 คะแนน!!';
-
-  const resultSub =
-    outcome.type === 'skip' ? 'ไม่สามารถตอบคำถามต่อไปได้'
-    : penalty > 0 ? `-${penalty.toLocaleString()} คะแนน`
-    : 'โชคดีไม่มีคะแนนเสีย';
+  const resultLine =
+    outcome.type === 'skip'    ? 'SKIP next question'
+    : penalty > 0              ? `-${penalty.toLocaleString()} points`
+    :                            'No penalty';
 
   return (
     <motion.div
@@ -104,30 +97,11 @@ export default function WheelOfMisfortune({ playerScore, onComplete }: WheelOfMi
         position: 'fixed', inset: 0, zIndex: 200,
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        background: 'rgba(0,0,0,0.94)',
+        background: 'rgba(5,5,5,0.97)',
         backdropFilter: 'blur(10px)',
         gap: 32,
       }}
     >
-      {/* Title */}
-      <motion.div
-        initial={{ opacity: 0, y: -16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, type: 'spring', stiffness: 260, damping: 22 }}
-        style={{
-          fontSize: 18, fontWeight: 900, color: '#FF4444',
-          letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center',
-        }}
-      >
-        <motion.span
-          animate={{ scale: [1, 1.04, 1], textShadow: ['0 0 18px rgba(255,80,80,0.7)', '0 0 32px rgba(255,80,80,1)', '0 0 18px rgba(255,80,80,0.7)'] }}
-          transition={{ duration: 1.4, repeat: Infinity, repeatType: 'mirror' }}
-          style={{ display: 'inline-block' }}
-        >
-          🎰 วงล้อแห่งโชคร้าย
-        </motion.span>
-      </motion.div>
-
       {/* Slot track */}
       <div
         style={{
@@ -169,7 +143,8 @@ export default function WheelOfMisfortune({ playerScore, onComplete }: WheelOfMi
                   width: CARD_W,
                   height: CARD_H,
                   borderRadius: 22,
-                  background: c.bg,
+                  background: '#0a0a0a',
+                  border: `2px solid ${c.border}`,
                   flexShrink: 0,
                   display: 'flex',
                   flexDirection: 'column',
@@ -177,33 +152,23 @@ export default function WheelOfMisfortune({ playerScore, onComplete }: WheelOfMi
                   justifyContent: 'center',
                   gap: 6,
                   boxShadow: isWinner
-                    ? `0 0 0 3px rgba(255,255,255,0.9), 0 0 60px ${c.glow}, 0 8px 32px rgba(0,0,0,0.5)`
-                    : '0 4px 20px rgba(0,0,0,0.4)',
-                  filter: (!isWinner && phase === 'result') ? 'brightness(0.45)' : 'none',
+                    ? `0 0 0 3px ${c.border}, 0 0 60px ${c.glow}, 0 8px 32px rgba(0,0,0,0.8)`
+                    : '0 4px 20px rgba(0,0,0,0.6)',
+                  filter: (!isWinner && phase === 'result') ? 'brightness(0.3)' : 'none',
                   transition: 'filter 0.4s',
                 }}
               >
                 <span
                   style={{
-                    fontSize: seg.type === 'skip' ? 28 : 36,
+                    fontSize: seg.type === 'skip' ? 26 : 36,
                     fontWeight: 900,
-                    color: '#fff',
+                    color: c.labelColor,
                     letterSpacing: seg.type === 'skip' ? 0 : -1,
                     lineHeight: 1,
                     fontFamily: 'inherit',
                   }}
                 >
                   {c.label}
-                </span>
-                <span
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: 'rgba(255,255,255,0.72)',
-                    letterSpacing: '0.5px',
-                  }}
-                >
-                  {c.sub}
                 </span>
               </motion.div>
             );
@@ -271,44 +236,24 @@ export default function WheelOfMisfortune({ playerScore, onComplete }: WheelOfMi
         />
       </div>
 
-      {/* Status / result */}
+      {/* Result */}
       <AnimatePresence mode="wait">
-        {phase !== 'result' ? (
-          <motion.div
-            key="spinning"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8, repeat: Infinity }}
-            style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.5)' }}
-          >
-            {phase === 'pre' ? 'กำลังเตรียม...' : 'กำลังหมุน...'}
-          </motion.div>
-        ) : (
+        {phase === 'result' && (
           <motion.div
             key="result"
-            initial={{ opacity: 0, y: 24, scale: 0.88 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ type: 'spring', stiffness: 340, damping: 22, delay: 0.1 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35 }}
             style={{
-              background: cfg.resultGradient,
-              borderRadius: 20,
-              padding: '18px 36px',
+              fontSize: 22,
+              fontWeight: 700,
+              color: cfg.resultColor,
               textAlign: 'center',
-              boxShadow: `0 10px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.12) inset`,
-              minWidth: 220,
+              letterSpacing: 0.5,
             }}
           >
-            <motion.div
-              animate={{ scale: [1, 1.06, 1] }}
-              transition={{ duration: 0.5, repeat: 2 }}
-              style={{ fontSize: 17, fontWeight: 900, color: '#fff', marginBottom: 6 }}
-            >
-              {resultTitle}
-            </motion.div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: 'rgba(255,255,255,0.92)' }}>
-              {resultSub}
-            </div>
+            {resultLine}
           </motion.div>
         )}
       </AnimatePresence>

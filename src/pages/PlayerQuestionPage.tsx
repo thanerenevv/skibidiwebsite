@@ -4,14 +4,18 @@ import {
   subscribeToGame,
   subscribeToPlayer,
   subscribeToPlayerAnswer,
+  subscribeToPlayers,
   submitAnswer,
   applyScorePenalty,
+  applyScoreBonus,
+  stealScore,
 } from '../firebase/gameService';
 import { QUESTIONS } from '../data/questions';
 import { CHOICE_LABELS } from '../lib/utils';
 import AnswerButton from '../components/ui/AnswerButton';
 import CountdownTimer from '../components/ui/CountdownTimer';
 import WheelOfMisfortune, { type WheelOutcome } from '../components/ui/WheelOfMisfortune';
+import WheelOfFortune, { type FortuneOutcome } from '../components/ui/WheelOfFortune';
 import type { Game, Answer, Player } from '../types';
 
 interface PlayerQuestionPageProps {
@@ -32,6 +36,7 @@ export default function PlayerQuestionPage({
   const [game, setGame] = useState<Game | null>(null);
   const [answer, setAnswer] = useState<Answer | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
+  const [players, setPlayers] = useState<Player[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [pointsEarned, setPointsEarned] = useState<number | null>(null);
 
@@ -39,16 +44,23 @@ export default function PlayerQuestionPage({
   const [showWheel, setShowWheel] = useState(false);
   const [penaltyApplied, setPenaltyApplied] = useState(false);
 
+  // Fortune wheel state
+  const [showFortune, setShowFortune] = useState(false);
+  const [fortuneApplied, setFortuneApplied] = useState(false);
+
   // Skip mechanic: ref avoids stale closure in question-change effect
   const willSkipNextRef = useRef(false);
   const [isSkipping, setIsSkipping] = useState(false);
+  // Immunity: next WoM is skipped (granted by WoF immunity outcome)
+  const wheelImmuneRef = useRef(false);
 
   const prevStatusRef = useRef<string | null>(null);
   const pendingNavRef = useRef<'leaderboard' | 'finished' | null>(null);
-  // Mirror showWheel into a ref so the status effect can read it without
-  // adding it to its dep array (which would cause spurious re-runs).
+  // Mirror spinning state into a ref so the status effect can read without stale closures.
   const showWheelRef = useRef(false);
   showWheelRef.current = showWheel;
+  const showFortuneRef = useRef(false);
+  showFortuneRef.current = showFortune;
 
   const handleLeaderboard = useCallback(onLeaderboard, []);
   const handleFinished = useCallback(onGameFinished, []);
@@ -61,8 +73,8 @@ export default function PlayerQuestionPage({
 
     if (status === 'leaderboard' || status === 'finished') {
       const nav = status === 'leaderboard' ? 'leaderboard' : 'finished';
-      if (showWheelRef.current) {
-        // Wheel is still spinning — defer navigation until onComplete fires
+      if (showWheelRef.current || showFortuneRef.current) {
+        // A wheel is still spinning — defer navigation until onComplete fires
         pendingNavRef.current = nav;
       } else {
         nav === 'leaderboard' ? handleLeaderboard() : handleFinished();
@@ -79,6 +91,11 @@ export default function PlayerQuestionPage({
     const unsub = subscribeToPlayer(gameCode, playerId, setPlayer);
     return unsub;
   }, [gameCode, playerId]);
+
+  useEffect(() => {
+    const unsub = subscribeToPlayers(gameCode, setPlayers);
+    return unsub;
+  }, [gameCode]);
 
   // Reset per-question state when question index advances
   useEffect(() => {
@@ -99,6 +116,8 @@ export default function PlayerQuestionPage({
     setSubmitting(false);
     setShowWheel(false);
     setPenaltyApplied(false);
+    setShowFortune(false);
+    setFortuneApplied(false);
 
     if (willSkipNextRef.current) {
       setIsSkipping(true);
@@ -115,12 +134,24 @@ export default function PlayerQuestionPage({
     return unsub;
   }, [gameCode, playerId, game?.currentQuestionIndex]);
 
-  // Trigger wheel 1.4s after a wrong answer
+  // Trigger WoM 1.4s after a wrong answer (skip if immune from WoF)
   useEffect(() => {
     if (!answer || answer.isCorrect || penaltyApplied || showWheel || isSkipping) return;
+    if (wheelImmuneRef.current) {
+      wheelImmuneRef.current = false;
+      setPenaltyApplied(true);
+      return;
+    }
     const t = setTimeout(() => setShowWheel(true), 1400);
     return () => clearTimeout(t);
   }, [answer, penaltyApplied, showWheel, isSkipping]);
+
+  // Trigger WoF 1.4s after a correct answer
+  useEffect(() => {
+    if (!answer || !answer.isCorrect || fortuneApplied || showFortune) return;
+    const t = setTimeout(() => setShowFortune(true), 1400);
+    return () => clearTimeout(t);
+  }, [answer, fortuneApplied, showFortune]);
 
   async function handleChoiceClick(choiceIndex: number) {
     if (!game || answer || submitting || isSkipping) return;
@@ -161,6 +192,25 @@ export default function PlayerQuestionPage({
     }
   }
 
+  async function handleFortuneComplete(outcome: FortuneOutcome, bonusAmount: number, victimId?: string) {
+    setShowFortune(false);
+    setFortuneApplied(true);
+
+    if (outcome === 'immunity') {
+      wheelImmuneRef.current = true;
+    } else if ((outcome === 'steal25' || outcome === 'steal50') && victimId && bonusAmount > 0) {
+      await stealScore(gameCode, playerId, victimId, bonusAmount);
+    } else if (bonusAmount > 0) {
+      await applyScoreBonus(gameCode, playerId, bonusAmount);
+    }
+
+    const pending = pendingNavRef.current;
+    if (pending) {
+      pendingNavRef.current = null;
+      pending === 'leaderboard' ? handleLeaderboard() : handleFinished();
+    }
+  }
+
   const spinner = (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <motion.div
@@ -173,32 +223,25 @@ export default function PlayerQuestionPage({
 
   if (!game) return spinner;
 
-  // After the question phase ends, keep the wheel alive so it can finish
-  // and call handleWheelComplete (which applies the penalty and navigates).
-  if (game.status !== 'question') {
-    return showWheel ? (
-      <WheelOfMisfortune
-        playerScore={player?.score ?? 0}
-        onComplete={handleWheelComplete}
-      />
-    ) : spinner;
-  }
-
-  const question = QUESTIONS[game.currentQuestionIndex];
+  const isQuestion = game.status === 'question';
+  const question = isQuestion ? QUESTIONS[game.currentQuestionIndex] : null;
   const hasAnswered = answer !== null;
 
   function getButtonState(i: number): ButtonState {
-    if (!hasAnswered) return 'default';
+    if (!hasAnswered || !question) return 'default';
     if (answer.choiceIndex === i) return answer.isCorrect ? 'correct' : 'wrong';
     if (i === question.correctIndex && !answer.isCorrect) return 'reveal-correct';
     return 'reveal-wrong';
   }
 
   return (
+    <>
+    {/* When status is no longer 'question', show spinner behind the wheels */}
+    {!isQuestion && !showWheel && !showFortune && spinner}
     <div
       style={{
         minHeight: '100vh',
-        display: 'flex',
+        display: isQuestion ? 'flex' : 'none',
         flexDirection: 'column',
         padding: '0 0 env(safe-area-inset-bottom, 16px)',
       }}
@@ -402,16 +445,31 @@ export default function PlayerQuestionPage({
         </motion.div>
       )}
 
-      {/* Penalty Wheel overlay */}
-      <AnimatePresence>
-        {showWheel && (
-          <WheelOfMisfortune
-            key="wheel"
-            playerScore={player?.score ?? 0}
-            onComplete={handleWheelComplete}
-          />
-        )}
-      </AnimatePresence>
     </div>
+
+    {/* Penalty Wheel overlay — kept at a stable tree position so React never remounts it mid-spin */}
+    <AnimatePresence>
+      {showWheel && (
+        <WheelOfMisfortune
+          key="wheel"
+          playerScore={player?.score ?? 0}
+          onComplete={handleWheelComplete}
+        />
+      )}
+    </AnimatePresence>
+
+    {/* Fortune Wheel overlay */}
+    <AnimatePresence>
+      {showFortune && (
+        <WheelOfFortune
+          key="fortune-wheel"
+          playerScore={player?.score ?? 0}
+          playerId={playerId}
+          players={players}
+          onComplete={handleFortuneComplete}
+        />
+      )}
+    </AnimatePresence>
+    </>
   );
 }

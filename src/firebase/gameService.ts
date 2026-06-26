@@ -304,6 +304,35 @@ export function subscribeToPlayer(
   });
 }
 
+export async function applyScoreBonus(
+  gameCode: string,
+  playerId: string,
+  bonusAmount: number,
+): Promise<void> {
+  if (bonusAmount <= 0) return;
+  await updateDoc(playerRef(gameCode, playerId), { score: increment(bonusAmount) });
+}
+
+export async function stealScore(
+  gameCode: string,
+  thiefId: string,
+  victimId: string,
+  stealAmount: number,
+): Promise<void> {
+  if (stealAmount <= 0) return;
+  const tRef = playerRef(gameCode, thiefId);
+  const vRef = playerRef(gameCode, victimId);
+  await runTransaction(db, async (txn) => {
+    const [tSnap, vSnap] = await Promise.all([txn.get(tRef), txn.get(vRef)]);
+    if (!tSnap.exists() || !vSnap.exists()) return;
+    const victimScore = (vSnap.data() as Player).score;
+    const actual = Math.min(stealAmount, Math.max(0, victimScore));
+    if (actual <= 0) return;
+    txn.update(vRef, { score: victimScore - actual });
+    txn.update(tRef, { score: (tSnap.data() as Player).score + actual });
+  });
+}
+
 export async function applyScorePenalty(
   gameCode: string,
   playerId: string,
