@@ -54,9 +54,15 @@ export function WebGLShader() {
     `
 
     refs.scene = new THREE.Scene()
-    refs.renderer = new THREE.WebGLRenderer({ canvas })
-    refs.renderer.setPixelRatio(window.devicePixelRatio)
-    refs.renderer.setClearColor(new THREE.Color(0x000000))
+    try {
+      refs.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'low-power' })
+    } catch {
+      // WebGL unavailable (older projector, locked-down browser, headless) —
+      // bail out gracefully; the dark CSS gradient on <body> remains as the backdrop.
+      return
+    }
+    refs.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    refs.renderer.setClearColor(new THREE.Color(0x050507))
     refs.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, -1)
 
     refs.uniforms = {

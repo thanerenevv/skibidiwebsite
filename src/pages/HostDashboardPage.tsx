@@ -191,13 +191,15 @@ export default function HostDashboardPage({ onGameStarted, onBack }: HostDashboa
 
           <div style={{ textAlign: 'left', marginBottom: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.6px' }}>
+              <label htmlFor="host-room-name" style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.6px' }}>
                 ชื่อห้อง / ชื่อผู้จัด
               </label>
               <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: 600 }}>{roomName.length}/24</span>
             </div>
             <input
+              id="host-room-name"
               type="text"
+              autoComplete="off"
               value={roomName}
               onChange={(e) => setRoomName(e.target.value.slice(0, 24))}
               onKeyDown={(e) => e.key === 'Enter' && !creating && handleCreateGame()}

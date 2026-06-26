@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { subscribeToPlayers } from '../firebase/gameService';
 import { formatScore } from '../lib/scoring';
@@ -16,12 +16,31 @@ const PODIUM_COLORS = [
   { bg: 'linear-gradient(135deg, #B45309 0%, #D97706 100%)', shadow: 'rgba(180,83,9,0.4)', label: '3rd' },
 ];
 
+const CONFETTI_COLORS = ['#F59E0B', '#3B82F6', '#22C55E', '#A855F7', '#EF4444', '#06B6D4'];
+
 export default function FinalLeaderboardPage({
   gameCode,
   playerId,
   onPlayAgain,
 }: FinalLeaderboardPageProps) {
   const [players, setPlayers] = useState<Player[]>([]);
+
+  // Compute confetti particles once so they don't re-randomize (and re-animate)
+  // every time the player list updates over the subscription.
+  const confetti = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, i) => ({
+        startX: Math.random() * 100,
+        startRotate: Math.random() * 360,
+        endRotate: Math.random() * 720,
+        duration: 4 + Math.random() * 3,
+        delay: i * 0.3,
+        size: 8 + Math.random() * 12,
+        round: Math.random() > 0.5,
+        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      })),
+    [],
+  );
 
   useEffect(() => {
     const unsub = subscribeToPlayers(gameCode, setPlayers);
@@ -46,22 +65,18 @@ export default function FinalLeaderboardPage({
         position: 'relative',
       }}
     >
-      {[...Array(12)].map((_, i) => (
+      {confetti.map((c, i) => (
         <motion.div
           key={i}
-          initial={{ y: '110vh', x: `${Math.random() * 100}vw`, rotate: Math.random() * 360 }}
-          animate={{ y: '-10vh', rotate: Math.random() * 720 }}
-          transition={{
-            duration: 4 + Math.random() * 3,
-            delay: i * 0.3,
-            ease: 'linear',
-          }}
+          initial={{ y: '110vh', x: `${c.startX}vw`, rotate: c.startRotate }}
+          animate={{ y: '-10vh', rotate: c.endRotate }}
+          transition={{ duration: c.duration, delay: c.delay, ease: 'linear' }}
           style={{
             position: 'fixed',
-            width: 8 + Math.random() * 12,
-            height: 8 + Math.random() * 12,
-            borderRadius: Math.random() > 0.5 ? '50%' : 2,
-            background: ['#F59E0B', '#3B82F6', '#22C55E', '#A855F7', '#EF4444', '#06B6D4'][i % 6],
+            width: c.size,
+            height: c.size,
+            borderRadius: c.round ? '50%' : 2,
+            background: c.color,
             pointerEvents: 'none',
             zIndex: 0,
           }}

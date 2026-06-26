@@ -83,9 +83,9 @@ export default function WheelOfMisfortune({ playerScore, onComplete }: WheelOfMi
   }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const resultLine =
-    outcome.type === 'skip'    ? 'SKIP next question'
-    : penalty > 0              ? `-${penalty.toLocaleString()} points`
-    :                            'No penalty';
+    outcome.type === 'skip'    ? 'ข้ามคำถามถัดไป!'
+    : penalty > 0              ? `-${penalty.toLocaleString()} คะแนน`
+    :                            'ไม่เสียคะแนน';
 
   return (
     <motion.div

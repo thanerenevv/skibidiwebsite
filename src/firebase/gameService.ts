@@ -344,7 +344,8 @@ export async function applyScorePenalty(
     const snap = await txn.get(pRef);
     if (!snap.exists()) return;
     const current = (snap.data() as Player).score;
-    txn.update(pRef, { score: current - penaltyAmount });
+    // Never let a flat penalty (-100 / -250) push a low score below zero.
+    txn.update(pRef, { score: Math.max(0, current - penaltyAmount) });
   });
 }
 

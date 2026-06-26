@@ -12,7 +12,7 @@
   font-family: 'Baloo 2', 'Segoe UI', system-ui, sans-serif;
   font-size: 16px;
   line-height: 1.5;
-  color-scheme: light;
+  color-scheme: dark;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -24,7 +24,10 @@ html, body {
   padding: 0;
   width: 100%;
   min-height: 100%;
-  background: #FFFBF0;
+  /* Dark fallback so the UI stays legible even if the WebGL background fails to load. */
+  background: #050507;
+  background-image: radial-gradient(ellipse 80% 60% at 50% 40%, #15132b 0%, #050507 70%);
+  color: #fff;
 }
 
 #root {
@@ -54,10 +57,10 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.18);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.3);
 }

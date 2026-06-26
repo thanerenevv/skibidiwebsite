@@ -113,12 +113,13 @@ export default function WheelOfFortune({ playerScore, playerId, players, onCompl
     return () => clearTimeout(t);
   }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const isSteal = outcome.type === 'steal25' || outcome.type === 'steal50';
   const resultLine =
-    outcome.type === 'immunity'  ? 'Next WoM is skipped!' :
-    outcome.type === 'double'    ? `Score doubled! +${bonus.toLocaleString()}` :
-    outcome.type === 'steal25'   ? `Stole ${bonus.toLocaleString()} from ${topPlayer?.nickname ?? 'top player'}` :
-    outcome.type === 'steal50'   ? `Stole ${bonus.toLocaleString()} from ${topPlayer?.nickname ?? 'top player'}` :
-    `+${bonus.toLocaleString()} points`;
+    outcome.type === 'immunity'  ? 'กันวงล้อโชคร้ายครั้งถัดไป!' :
+    outcome.type === 'double'    ? `คะแนนคูณสอง! +${bonus.toLocaleString()}` :
+    isSteal && (!victimId || bonus <= 0) ? 'ไม่มีเป้าหมายให้ขโมยคะแนน' :
+    isSteal                      ? `ขโมย ${bonus.toLocaleString()} คะแนนจาก ${topPlayer?.nickname ?? ''}` :
+    `+${bonus.toLocaleString()} คะแนน`;
 
   return (
     <motion.div
@@ -306,7 +307,7 @@ export default function WheelOfFortune({ playerScore, playerId, players, onCompl
             transition={{ duration: 0.8, repeat: Infinity }}
             style={{ fontSize: 14, fontWeight: 500, color: 'rgba(15,23,42,0.45)' }}
           >
-            {phase === 'pre' ? 'preparing...' : 'spinning...'}
+            {phase === 'pre' ? 'กำลังเตรียม...' : 'กำลังหมุน...'}
           </motion.div>
         )}
       </AnimatePresence>

@@ -155,7 +155,7 @@ export default function PlayerJoinPage({ initialCode, onJoined, onBack }: Player
           style={{ ...glassCard, borderRadius: 18, padding: '16px 18px' }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <label style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.6px' }}>
+            <label htmlFor="join-nickname" style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.6px' }}>
               ชื่อเล่นของคุณ
             </label>
             <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: 600 }}>
@@ -163,11 +163,14 @@ export default function PlayerJoinPage({ initialCode, onJoined, onBack }: Player
             </span>
           </div>
           <input
+            id="join-nickname"
             ref={nickRef}
             type="text"
             value={nickname}
             onChange={(e) => persistNick(e.target.value.slice(0, 20))}
             placeholder="กรอกชื่อเล่นของคุณ"
+            autoComplete="off"
+            maxLength={20}
             style={fieldStyle}
             onFocus={(e) => focusField(e.target)}
             onBlur={(e) => blurField(e.target)}
@@ -309,11 +312,15 @@ export default function PlayerJoinPage({ initialCode, onJoined, onBack }: Player
               transition={{ duration: 0.2 }}
               style={{ ...glassCard, borderRadius: 20, padding: '24px 20px' }}
             >
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 10, letterSpacing: '0.6px' }}>
+              <label htmlFor="join-code" style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 10, letterSpacing: '0.6px' }}>
                 รหัสเกม (6 หลัก)
               </label>
               <input
+                id="join-code"
                 type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="off"
                 value={manualCode}
                 onChange={(e) => { setManualCode(e.target.value.replace(/\D/g, '').slice(0, 6)); if (error) setError(''); }}
                 onKeyDown={(e) => e.key === 'Enter' && handleJoin(manualCode)}
