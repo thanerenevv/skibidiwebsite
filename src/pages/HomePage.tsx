@@ -10,13 +10,6 @@ interface HomePageProps {
   onJoinRoom: (code: string) => void;
 }
 
-const orbs = [
-  { left: '-5%',  top: '5%',  size: 420, color: 'rgba(99,102,241,0.18)',  duration: 9,  delay: 0   },
-  { left: '65%',  top: '-5%', size: 320, color: 'rgba(236,72,153,0.14)',  duration: 11, delay: 1.5 },
-  { left: '75%',  top: '55%', size: 380, color: 'rgba(59,130,246,0.12)',  duration: 13, delay: 0.8 },
-  { left: '-8%',  top: '60%', size: 260, color: 'rgba(168,85,247,0.15)', duration: 10, delay: 2   },
-];
-
 type Tab = 'home' | 'rooms';
 
 const TITLE = 'กฎหมายธุรกิจ';
@@ -27,13 +20,11 @@ export default function HomePage({ onHostGame, onJoinGame, onJoinRoom }: HomePag
   const [roomsLoading, setRoomsLoading] = useState(true);
   const [joiningCode, setJoiningCode] = useState<string | null>(null);
 
-  // Typing animation
   const [displayText, setDisplayText] = useState('');
   const [cursorVisible, setCursorVisible] = useState(true);
   const [typingDone, setTypingDone] = useState(false);
-  const [showUnderline, setShowUnderline] = useState(false);
+  const [showSub, setShowSub] = useState(false);
 
-  // Responsive: side-by-side on wide screens
   const [isWide, setIsWide] = useState(() => window.innerWidth >= 700);
 
   useEffect(() => {
@@ -50,13 +41,11 @@ export default function HomePage({ onHostGame, onJoinGame, onJoinRoom }: HomePag
     return unsub;
   }, []);
 
-  // Typewriter effect on mount
   useEffect(() => {
     setDisplayText('');
     setTypingDone(false);
     setCursorVisible(true);
-    setShowUnderline(false);
-
+    setShowSub(false);
     let i = 0;
     const startDelay = setTimeout(() => {
       const interval = setInterval(() => {
@@ -65,26 +54,21 @@ export default function HomePage({ onHostGame, onJoinGame, onJoinRoom }: HomePag
         if (i >= TITLE.length) {
           clearInterval(interval);
           setTypingDone(true);
-          setTimeout(() => setShowUnderline(true), 120);
+          setTimeout(() => setShowSub(true), 200);
         }
-      }, 85);
+      }, 80);
       return () => clearInterval(interval);
-    }, 300);
-
+    }, 250);
     return () => clearTimeout(startDelay);
   }, []);
 
-  // Blink cursor a few times after typing, then hide it
   useEffect(() => {
     if (!typingDone) return;
     let blinks = 0;
     const interval = setInterval(() => {
       setCursorVisible((v) => !v);
       blinks++;
-      if (blinks >= 6) {
-        clearInterval(interval);
-        setCursorVisible(false);
-      }
+      if (blinks >= 6) { clearInterval(interval); setCursorVisible(false); }
     }, 380);
     return () => clearInterval(interval);
   }, [typingDone]);
@@ -107,81 +91,82 @@ export default function HomePage({ onHostGame, onJoinGame, onJoinRoom }: HomePag
         boxSizing: 'border-box',
       }}
     >
-      {/* Animated background orbs */}
-      {orbs.map((orb, i) => (
-        <motion.div
-          key={i}
-          animate={{ x: [0, 25, -15, 10, 0], y: [0, -18, 24, -8, 0], scale: [1, 1.08, 0.96, 1.04, 1] }}
-          transition={{ duration: orb.duration, delay: orb.delay, repeat: Infinity, ease: 'easeInOut' }}
-          style={{
-            position: 'fixed',
-            left: orb.left, top: orb.top,
-            width: orb.size, height: orb.size,
-            borderRadius: '50%',
-            background: `radial-gradient(circle, ${orb.color}, transparent 70%)`,
-            filter: 'blur(48px)',
-            pointerEvents: 'none', zIndex: 0,
-          }}
-        />
-      ))}
-
-      {/* Grid overlay */}
+      {/* Single minimal background glow */}
       <div
         style={{
-          position: 'fixed', inset: 0,
-          backgroundImage:
-            'linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)',
-          backgroundSize: '48px 48px',
-          pointerEvents: 'none', zIndex: 0,
+          position: 'fixed',
+          inset: 0,
+          background:
+            'radial-gradient(ellipse 70% 55% at 15% 30%, rgba(99,102,241,0.12) 0%, transparent 65%),' +
+            'radial-gradient(ellipse 50% 45% at 80% 75%, rgba(168,85,247,0.09) 0%, transparent 60%)',
+          pointerEvents: 'none',
+          zIndex: 0,
         }}
       />
 
       {/* Main layout */}
       <div
         style={{
-          position: 'relative', zIndex: 1,
+          position: 'relative',
+          zIndex: 1,
           width: '100%',
-          maxWidth: isWide ? 920 : 480,
+          maxWidth: isWide ? 880 : 460,
           display: 'flex',
           flexDirection: isWide ? 'row' : 'column',
-          alignItems: isWide ? 'center' : 'stretch',
-          gap: isWide ? 60 : 28,
+          alignItems: isWide ? 'flex-start' : 'stretch',
+          gap: isWide ? 72 : 32,
         }}
       >
-        {/* ── LEFT: Typing title ── */}
+        {/* LEFT: Title */}
         <motion.div
-          initial={{ opacity: 0, x: isWide ? -28 : 0, y: isWide ? 0 : 24 }}
-          animate={{ opacity: 1, x: 0, y: 0 }}
-          transition={{ type: 'spring', stiffness: 200, damping: 22, delay: 0.1 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           style={{
-            flex: isWide ? '0 0 320px' : undefined,
+            flex: isWide ? '0 0 300px' : undefined,
             textAlign: isWide ? 'left' : 'center',
+            paddingTop: isWide ? 8 : 0,
           }}
         >
+          {/* Eyebrow label */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.15, duration: 0.4 }}
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: '2px',
+              color: 'rgba(139,92,246,0.9)',
+              marginBottom: 14,
+              textTransform: 'uppercase',
+            }}
+          >
+            Quiz Game
+          </motion.div>
+
           <h1
             style={{
-              fontSize: isWide ? 'clamp(44px, 5vw, 72px)' : 'clamp(38px, 10vw, 64px)',
+              fontSize: isWide ? 'clamp(40px, 4.5vw, 62px)' : 'clamp(36px, 9vw, 56px)',
               fontWeight: 900,
               margin: 0,
-              lineHeight: 1.04,
-              letterSpacing: '-2px',
-              background: 'linear-gradient(135deg, #fff 30%, rgba(196,181,253,0.9) 70%, rgba(236,72,153,0.85) 100%)',
+              lineHeight: 1.08,
+              letterSpacing: '-1.5px',
+              background: 'linear-gradient(135deg, #ffffff 30%, rgba(196,181,253,0.9) 65%, rgba(236,72,153,0.8) 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
-              minHeight: '1.04em',
             }}
           >
             {displayText}
-            {/* Blinking cursor */}
             <span
               style={{
                 display: 'inline-block',
-                width: 3,
+                width: 2,
                 height: '0.78em',
-                background: 'rgba(196,181,253,0.9)',
-                marginLeft: 4,
-                borderRadius: 2,
+                background: 'rgba(196,181,253,0.85)',
+                marginLeft: 3,
+                borderRadius: 1,
                 verticalAlign: 'middle',
                 opacity: cursorVisible ? 1 : 0,
                 transition: 'opacity 80ms',
@@ -189,52 +174,41 @@ export default function HomePage({ onHostGame, onJoinGame, onJoinRoom }: HomePag
             />
           </h1>
 
-          {/* Underline sweeps in after typing finishes */}
-          <motion.div
-            initial={{ scaleX: 0, opacity: 0 }}
-            animate={showUnderline ? { scaleX: 1, opacity: 1 } : { scaleX: 0, opacity: 0 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            style={{
-              height: 3,
-              background: 'linear-gradient(90deg, #6366F1, #A855F7, #EC4899)',
-              borderRadius: 2,
-              margin: isWide ? '12px 0 0' : '12px auto 0',
-              width: isWide ? '78%' : '55%',
-              transformOrigin: 'left',
-            }}
-          />
-
-          {/* Subtle tag line */}
           <motion.p
             initial={{ opacity: 0, y: 6 }}
-            animate={showUnderline ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
-            transition={{ delay: 0.25, duration: 0.4 }}
+            animate={showSub ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+            transition={{ duration: 0.4 }}
             style={{
-              fontSize: 13,
-              fontWeight: 600,
+              fontSize: 14,
+              fontWeight: 500,
               color: 'rgba(255,255,255,0.38)',
-              margin: '10px 0 0',
-              letterSpacing: '0.8px',
+              margin: isWide ? '14px 0 0' : '12px auto 0',
+              lineHeight: 1.6,
+              maxWidth: 260,
             }}
           >
-            {rooms.length > 0 ? `${rooms.length} ห้องที่เปิดอยู่` : 'เกมกฎหมายธุรกิจ'}
+            {rooms.length > 0
+              ? `${rooms.length} ห้องที่เปิดอยู่ตอนนี้`
+              : 'แข่งขันตอบคำถามกฎหมายธุรกิจ'}
           </motion.p>
         </motion.div>
 
-        {/* ── RIGHT: Tabs + buttons ── */}
+        {/* RIGHT: Controls */}
         <motion.div
-          initial={{ opacity: 0, x: isWide ? 28 : 0, y: isWide ? 0 : 24 }}
-          animate={{ opacity: 1, x: 0, y: 0 }}
-          transition={{ type: 'spring', stiffness: 200, damping: 22, delay: 0.22 }}
-          style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+          style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}
         >
           {/* Tab bar */}
           <div
             style={{
-              display: 'flex', gap: 4, padding: 4,
-              borderRadius: 16,
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              display: 'flex',
+              gap: 2,
+              padding: 3,
+              borderRadius: 14,
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.07)',
             }}
           >
             {([
@@ -245,35 +219,56 @@ export default function HomePage({ onHostGame, onJoinGame, onJoinRoom }: HomePag
                 key={t.id}
                 onClick={() => setTab(t.id)}
                 style={{
-                  position: 'relative', flex: 1,
-                  border: 'none', background: 'transparent',
-                  cursor: 'pointer', padding: '11px 8px', borderRadius: 12,
-                  fontFamily: 'inherit', fontSize: 14, fontWeight: 700,
-                  color: tab === t.id ? '#fff' : 'rgba(255,255,255,0.55)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                  position: 'relative',
+                  flex: 1,
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  padding: '10px 8px',
+                  borderRadius: 11,
+                  fontFamily: 'inherit',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: tab === t.id ? '#fff' : 'rgba(255,255,255,0.45)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  transition: 'color 150ms',
                 }}
               >
                 {tab === t.id && (
                   <motion.div
-                    layoutId="home-tab-pill"
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    layoutId="tab-bg"
+                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
                     style={{
-                      position: 'absolute', inset: 0, borderRadius: 12,
-                      background: accentGradient,
-                      boxShadow: '0 6px 20px rgba(139,92,246,0.4)', zIndex: 0,
+                      position: 'absolute',
+                      inset: 0,
+                      borderRadius: 11,
+                      background: 'rgba(255,255,255,0.09)',
+                      border: '1px solid rgba(255,255,255,0.1)',
                     }}
                   />
                 )}
                 <span style={{ position: 'relative', zIndex: 1 }}>{t.label}</span>
                 {'badge' in t && t.badge != null && t.badge > 0 && (
-                  <span style={{
-                    position: 'relative', zIndex: 1,
-                    fontSize: 11, fontWeight: 800,
-                    minWidth: 18, height: 18, padding: '0 5px', borderRadius: 9,
-                    background: tab === t.id ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)',
-                    color: '#fff',
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
+                  <span
+                    style={{
+                      position: 'relative',
+                      zIndex: 1,
+                      fontSize: 11,
+                      fontWeight: 800,
+                      minWidth: 18,
+                      height: 18,
+                      padding: '0 5px',
+                      borderRadius: 9,
+                      background: tab === t.id ? 'rgba(139,92,246,0.5)' : 'rgba(255,255,255,0.1)',
+                      color: '#fff',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
                     {t.badge}
                   </span>
                 )}
@@ -286,144 +281,129 @@ export default function HomePage({ onHostGame, onJoinGame, onJoinRoom }: HomePag
             {tab === 'home' ? (
               <motion.div
                 key="home"
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.2 }}
-                style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.18 }}
+                style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
               >
                 {/* Join — primary */}
-                <motion.div
-                  initial={{ opacity: 0, x: 24 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.32, type: 'spring', stiffness: 260, damping: 22 }}
+                <motion.button
+                  onClick={onJoinGame}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.28, duration: 0.35 }}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.985 }}
+                  style={{
+                    background: accentGradient,
+                    border: 'none',
+                    borderRadius: 18,
+                    padding: '22px 24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 16,
+                    cursor: 'pointer',
+                    boxShadow: '0 8px 32px rgba(99,102,241,0.35)',
+                    width: '100%',
+                    fontFamily: 'inherit',
+                  }}
                 >
-                  <motion.button
-                    onClick={onJoinGame}
-                    whileHover={{ scale: 1.03, y: -6 }}
-                    whileTap={{ scale: 0.975 }}
-                    transition={{ type: 'spring', stiffness: 380, damping: 18 }}
+                  <div
                     style={{
-                      background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 55%, #A855F7 100%)',
-                      border: 'none', borderRadius: 22,
-                      padding: '26px 28px',
-                      display: 'flex', alignItems: 'center', gap: 18,
-                      cursor: 'pointer',
-                      boxShadow: '0 10px 40px rgba(99,102,241,0.5), 0 0 0 1px rgba(255,255,255,0.12) inset',
-                      width: '100%', fontFamily: 'inherit',
-                      position: 'relative', overflow: 'hidden',
+                      width: 46,
+                      height: 46,
+                      borderRadius: 12,
+                      background: 'rgba(255,255,255,0.18)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
                     }}
                   >
-                    {/* Sweeping shine */}
-                    <motion.div
-                      animate={{ x: ['-120%', '220%'] }}
-                      transition={{ duration: 2.6, repeat: Infinity, repeatDelay: 2.8, ease: 'easeInOut' }}
-                      style={{
-                        position: 'absolute', top: 0, left: 0,
-                        width: '45%', height: '100%',
-                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)',
-                        pointerEvents: 'none',
-                      }}
-                    />
-                    {/* Pulse glow ring */}
-                    <motion.div
-                      animate={{ scale: [1, 1.55, 1], opacity: [0.45, 0, 0.45] }}
-                      transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
-                      style={{
-                        position: 'absolute', inset: 0, borderRadius: 22,
-                        border: '2px solid rgba(139,92,246,0.7)',
-                        pointerEvents: 'none',
-                      }}
-                    />
-
-                    <div style={{ width: 54, height: 54, borderRadius: 15, background: 'rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#fff" strokeWidth="2.3" strokeLinecap="round"/>
-                        <circle cx="9" cy="7" r="4" stroke="#fff" strokeWidth="2.3"/>
-                        <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#fff" strokeWidth="2.3" strokeLinecap="round"/>
-                      </svg>
-                    </div>
-
-                    <div style={{ textAlign: 'left', flex: 1 }}>
-                      <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>เข้าร่วมเกม</div>
-                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.68)', fontWeight: 500, marginTop: 3 }}>
-                        เลือกห้องที่เปิดอยู่ หรือกรอกรหัส
-                      </div>
-                    </div>
-
-                    <motion.div
-                      animate={{ x: [0, 4, 0] }}
-                      transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-                    >
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.8 }}>
-                        <path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </motion.div>
-                  </motion.button>
-                </motion.div>
-
-                {/* Host — glass */}
-                <motion.div
-                  initial={{ opacity: 0, x: 24 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.44, type: 'spring', stiffness: 260, damping: 22 }}
-                >
-                  <motion.button
-                    onClick={onHostGame}
-                    whileHover={{ scale: 1.03, y: -6 }}
-                    whileTap={{ scale: 0.975 }}
-                    transition={{ type: 'spring', stiffness: 380, damping: 18 }}
-                    style={{
-                      background: 'rgba(255,255,255,0.07)',
-                      border: '1.5px solid rgba(255,255,255,0.18)',
-                      borderRadius: 22, padding: '26px 28px',
-                      display: 'flex', alignItems: 'center', gap: 18,
-                      cursor: 'pointer',
-                      backdropFilter: 'blur(24px)',
-                      boxShadow: '0 4px 28px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.06) inset',
-                      width: '100%', fontFamily: 'inherit',
-                      position: 'relative', overflow: 'hidden',
-                    }}
-                  >
-                    {/* Subtle shimmer on host button */}
-                    <motion.div
-                      animate={{ x: ['-120%', '220%'] }}
-                      transition={{ duration: 3.2, repeat: Infinity, repeatDelay: 4, ease: 'easeInOut', delay: 1.5 }}
-                      style={{
-                        position: 'absolute', top: 0, left: 0,
-                        width: '40%', height: '100%',
-                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent)',
-                        pointerEvents: 'none',
-                      }}
-                    />
-
-                    <div style={{ width: 54, height: 54, borderRadius: 15, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                        <rect x="2" y="3" width="20" height="14" rx="2" stroke="rgba(255,255,255,0.88)" strokeWidth="2.3"/>
-                        <path d="M8 21h8M12 17v4" stroke="rgba(255,255,255,0.88)" strokeWidth="2.3" strokeLinecap="round"/>
-                      </svg>
-                    </div>
-
-                    <div style={{ textAlign: 'left', flex: 1 }}>
-                      <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>จัดเกม</div>
-                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.48)', fontWeight: 500, marginTop: 3 }}>
-                        สร้างห้องและเชิญผู้เล่น
-                      </div>
-                    </div>
-
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, opacity: 0.35 }}>
-                      <path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#fff" strokeWidth="2.2" strokeLinecap="round"/>
+                      <circle cx="9" cy="7" r="4" stroke="#fff" strokeWidth="2.2"/>
+                      <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#fff" strokeWidth="2.2" strokeLinecap="round"/>
                     </svg>
-                  </motion.button>
-                </motion.div>
+                  </div>
+                  <div style={{ textAlign: 'left', flex: 1 }}>
+                    <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>เข้าร่วมเกม</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', fontWeight: 500, marginTop: 3 }}>
+                      เลือกห้องที่เปิดอยู่ หรือกรอกรหัส
+                    </div>
+                  </div>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.7, flexShrink: 0 }}>
+                    <path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </motion.button>
+
+                {/* Host — minimal glass */}
+                <motion.button
+                  onClick={onHostGame}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.36, duration: 0.35 }}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.985 }}
+                  style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: 18,
+                    padding: '22px 24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 16,
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(16px)',
+                    width: '100%',
+                    fontFamily: 'inherit',
+                    transition: 'background 150ms, border-color 150ms',
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.08)';
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.18)';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)';
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.12)';
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 46,
+                      height: 46,
+                      borderRadius: 12,
+                      background: 'rgba(255,255,255,0.08)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <rect x="2" y="3" width="20" height="14" rx="2" stroke="rgba(255,255,255,0.8)" strokeWidth="2.2"/>
+                      <path d="M8 21h8M12 17v4" stroke="rgba(255,255,255,0.8)" strokeWidth="2.2" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <div style={{ textAlign: 'left', flex: 1 }}>
+                    <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>จัดเกม</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.42)', fontWeight: 500, marginTop: 3 }}>
+                      สร้างห้องและเชิญผู้เล่น
+                    </div>
+                  </div>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, opacity: 0.3 }}>
+                    <path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </motion.button>
               </motion.div>
             ) : (
               <motion.div
                 key="rooms"
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.2 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.18 }}
               >
                 <HomeRoomList
                   rooms={rooms}
@@ -455,17 +435,28 @@ function HomeRoomList({
 }) {
   if (loading) {
     return (
-      <div style={{ ...glassCard, borderRadius: 20, padding: '48px 20px', textAlign: 'center' }}>
+      <div
+        style={{
+          ...glassCard,
+          borderRadius: 18,
+          padding: '44px 20px',
+          textAlign: 'center',
+        }}
+      >
         <motion.span
           animate={{ rotate: 360 }}
-          transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+          transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }}
           style={{
-            display: 'inline-block', width: 28, height: 28,
-            border: '3px solid rgba(255,255,255,0.25)', borderTopColor: '#fff', borderRadius: '50%',
+            display: 'inline-block',
+            width: 24,
+            height: 24,
+            border: '2px solid rgba(255,255,255,0.15)',
+            borderTopColor: 'rgba(139,92,246,0.8)',
+            borderRadius: '50%',
           }}
         />
-        <p style={{ marginTop: 14, fontSize: 14, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
-          กำลังค้นหาห้องที่เปิดอยู่...
+        <p style={{ marginTop: 12, fontSize: 13, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>
+          กำลังค้นหาห้อง...
         </p>
       </div>
     );
@@ -473,23 +464,41 @@ function HomeRoomList({
 
   if (rooms.length === 0) {
     return (
-      <div style={{ ...glassCard, borderRadius: 20, padding: '40px 24px', textAlign: 'center' }}>
-        <div style={{ width: 60, height: 60, borderRadius: 18, margin: '0 auto 16px', background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
-            <path d="M3 9l9-6 9 6v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="rgba(255,255,255,0.4)" strokeWidth="1.8" strokeLinejoin="round" />
-            <path d="M9 22V12h6v10" stroke="rgba(255,255,255,0.4)" strokeWidth="1.8" strokeLinejoin="round" />
+      <div
+        style={{
+          ...glassCard,
+          borderRadius: 18,
+          padding: '36px 24px',
+          textAlign: 'center',
+        }}
+      >
+        <div
+          style={{
+            width: 52,
+            height: 52,
+            borderRadius: 14,
+            margin: '0 auto 14px',
+            background: 'rgba(255,255,255,0.05)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M3 9l9-6 9 6v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="rgba(255,255,255,0.35)" strokeWidth="1.8" strokeLinejoin="round"/>
+            <path d="M9 22V12h6v10" stroke="rgba(255,255,255,0.35)" strokeWidth="1.8" strokeLinejoin="round"/>
           </svg>
         </div>
-        <h3 style={{ fontSize: 17, fontWeight: 800, color: '#fff', margin: '0 0 6px' }}>ยังไม่มีห้องที่เปิดอยู่</h3>
-        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', margin: 0, fontWeight: 500 }}>
-          รอผู้จัดสร้างห้อง หรือไปที่ "เข้าร่วมเกม" แล้วกรอกรหัสเอง
+        <h3 style={{ fontSize: 15, fontWeight: 700, color: '#fff', margin: '0 0 6px' }}>ยังไม่มีห้องที่เปิดอยู่</h3>
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.38)', margin: 0, fontWeight: 500, lineHeight: 1.5 }}>
+          รอผู้จัดสร้างห้อง หรือกรอกรหัสเอง
         </p>
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <AnimatePresence initial={false}>
         {rooms.map((room, i) => (
           <HomeRoomCard
@@ -525,76 +534,113 @@ function HomeRoomCard({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 16, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
-      transition={{ type: 'spring', stiffness: 300, damping: 26, delay: Math.min(index * 0.04, 0.3) }}
-      style={{ ...glassCard, borderRadius: 18, padding: 16, overflow: 'hidden' }}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.15 } }}
+      transition={{ type: 'spring', stiffness: 320, damping: 28, delay: Math.min(index * 0.04, 0.25) }}
+      style={{
+        background: 'rgba(255,255,255,0.05)',
+        border: '1px solid rgba(255,255,255,0.09)',
+        borderRadius: 16,
+        padding: '14px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+      }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 46, height: 46, borderRadius: 13, flexShrink: 0, background: avatarColor(host), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff', boxShadow: '0 4px 14px rgba(0,0,0,0.3)' }}>
-          {host.charAt(0).toUpperCase()}
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <span style={{ fontSize: 16, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{host}</span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-              <motion.span animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.8, repeat: Infinity }} style={{ width: 7, height: 7, borderRadius: '50%', background: '#22C55E', display: 'inline-block' }} />
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#4ADE80' }}>เปิดอยู่</span>
-            </span>
-          </div>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', fontWeight: 600, marginTop: 2 }}>
-            รหัส <span style={{ color: 'rgba(255,255,255,0.78)', letterSpacing: '1.5px', fontWeight: 800 }}>{room.code}</span>
-          </div>
-        </div>
-        <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(255,255,255,0.06)', borderRadius: 12, padding: '6px 12px', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <span style={{ fontSize: 18, fontWeight: 900, color: '#fff', lineHeight: 1 }}>{members}</span>
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>ผู้เล่น</span>
-        </div>
+      <div
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 11,
+          flexShrink: 0,
+          background: avatarColor(host),
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 17,
+          fontWeight: 800,
+          color: '#fff',
+        }}
+      >
+        {host.charAt(0).toUpperCase()}
       </div>
 
-      <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '14px 0 12px' }} />
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-            <path d="M9 11l3 3L22 4" stroke="rgba(255,255,255,0.45)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="rgba(255,255,255,0.45)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          {room.totalQuestions} คำถาม
-        </span>
-        <motion.button
-          onClick={onJoin}
-          disabled={anyJoining}
-          whileHover={!anyJoining ? { scale: 1.04 } : {}}
-          whileTap={!anyJoining ? { scale: 0.96 } : {}}
-          style={{
-            border: 'none', borderRadius: 12, padding: '11px 22px',
-            background: accentGradient, color: '#fff',
-            fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
-            cursor: anyJoining ? 'not-allowed' : 'pointer',
-            boxShadow: '0 6px 18px rgba(139,92,246,0.4)',
-            opacity: anyJoining && !joining ? 0.5 : 1,
-            display: 'inline-flex', alignItems: 'center', gap: 7,
-            minWidth: 104, justifyContent: 'center',
-          }}
-        >
-          {joining ? (
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span
+            style={{
+              fontSize: 15,
+              fontWeight: 700,
+              color: '#fff',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {host}
+          </span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
             <motion.span
-              animate={{ rotate: 360 }}
-              transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
-              style={{ display: 'inline-block', width: 18, height: 18, border: '2.5px solid rgba(255,255,255,0.35)', borderTopColor: '#fff', borderRadius: '50%' }}
+              animate={{ opacity: [1, 0.3, 1] }}
+              transition={{ duration: 1.8, repeat: Infinity }}
+              style={{ width: 5, height: 5, borderRadius: '50%', background: '#22C55E', display: 'inline-block' }}
             />
-          ) : (
-            <>
-              เข้าร่วม
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </>
-          )}
-        </motion.button>
+            <span style={{ fontSize: 10, fontWeight: 700, color: '#4ADE80' }}>LIVE</span>
+          </span>
+        </div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.38)', fontWeight: 600, marginTop: 1 }}>
+          {room.code} · {members} ผู้เล่น · {room.totalQuestions} คำถาม
+        </div>
       </div>
+
+      <motion.button
+        onClick={onJoin}
+        disabled={anyJoining}
+        whileHover={!anyJoining ? { scale: 1.04 } : {}}
+        whileTap={!anyJoining ? { scale: 0.96 } : {}}
+        style={{
+          border: 'none',
+          borderRadius: 10,
+          padding: '9px 18px',
+          background: accentGradient,
+          color: '#fff',
+          fontSize: 13,
+          fontWeight: 700,
+          fontFamily: 'inherit',
+          cursor: anyJoining ? 'not-allowed' : 'pointer',
+          boxShadow: '0 4px 14px rgba(99,102,241,0.3)',
+          opacity: anyJoining && !joining ? 0.45 : 1,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+          flexShrink: 0,
+          minWidth: 80,
+          justifyContent: 'center',
+        }}
+      >
+        {joining ? (
+          <motion.span
+            animate={{ rotate: 360 }}
+            transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+            style={{
+              display: 'inline-block',
+              width: 14,
+              height: 14,
+              border: '2px solid rgba(255,255,255,0.3)',
+              borderTopColor: '#fff',
+              borderRadius: '50%',
+            }}
+          />
+        ) : (
+          <>
+            เข้าร่วม
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </>
+        )}
+      </motion.button>
     </motion.div>
   );
 }

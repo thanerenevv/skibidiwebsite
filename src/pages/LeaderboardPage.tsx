@@ -20,8 +20,11 @@ interface LeaderboardPageProps {
   onGameFinished: () => void;
 }
 
-const MEDAL_COLORS = ['#F59E0B', '#94A3B8', '#CD7C34'];
-const MEDAL_LABELS = ['1st', '2nd', '3rd'];
+const RANK_CONFIG = [
+  { bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.3)', badge: '#F59E0B', label: '1st' },
+  { bg: 'rgba(148,163,184,0.12)', border: 'rgba(148,163,184,0.22)', badge: '#94A3B8', label: '2nd' },
+  { bg: 'rgba(180,100,40,0.13)', border: 'rgba(205,124,52,0.25)', badge: '#CD7C34', label: '3rd' },
+];
 
 export default function LeaderboardPage({
   gameCode,
@@ -54,11 +57,10 @@ export default function LeaderboardPage({
   }, [gameCode, handleNext, handleFinish]);
 
   useEffect(() => {
-    const t = setTimeout(() => setShowCorrectAnswer(true), 400);
+    const t = setTimeout(() => setShowCorrectAnswer(true), 350);
     return () => clearTimeout(t);
   }, []);
 
-  // Give players' wheels time to finish before the host can advance
   useEffect(() => {
     if (!isHost) return;
     setWheelCooldown(8);
@@ -93,9 +95,7 @@ export default function LeaderboardPage({
 
   const isLastQuestion = game ? game.currentQuestionIndex >= QUESTIONS.length - 1 : false;
   const currentQuestion = game ? QUESTIONS[game.currentQuestionIndex] : null;
-  const correctChoice = currentQuestion
-    ? currentQuestion.choices[currentQuestion.correctIndex]
-    : null;
+  const correctChoice = currentQuestion ? currentQuestion.choices[currentQuestion.correctIndex] : null;
 
   return (
     <div
@@ -103,75 +103,99 @@ export default function LeaderboardPage({
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        padding: '24px',
-        gap: 20,
+        padding: '28px 20px',
+        gap: 16,
         boxSizing: 'border-box',
+        maxWidth: 600,
+        margin: '0 auto',
+        width: '100%',
       }}
     >
+      {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-        style={{ textAlign: 'center', paddingTop: 8 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        style={{ paddingTop: 8 }}
       >
-        <h2
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+          <h2
+            style={{
+              fontSize: 'clamp(24px, 5vw, 34px)',
+              fontWeight: 900,
+              color: '#fff',
+              margin: 0,
+              letterSpacing: '-0.5px',
+            }}
+          >
+            ลีดเดอร์บอร์ด
+          </h2>
+          {game && (
+            <span
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: 'rgba(255,255,255,0.35)',
+                letterSpacing: '0.5px',
+              }}
+            >
+              ข้อ {game.currentQuestionIndex + 1} / {game.totalQuestions}
+            </span>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div
           style={{
-            fontSize: 'clamp(22px, 4vw, 32px)',
-            fontWeight: 800,
-            color: '#FFFFFF',
-            margin: '0 0 4px',
+            height: 1,
+            background: 'linear-gradient(90deg, rgba(99,102,241,0.5), rgba(168,85,247,0.3), transparent)',
+            marginTop: 14,
           }}
-        >
-          ลีดเดอร์บอร์ด
-        </h2>
-        {game && (
-          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', margin: 0, fontWeight: 600 }}>
-            หลังข้อที่ {game.currentQuestionIndex + 1} / {game.totalQuestions}
-          </p>
-        )}
+        />
       </motion.div>
 
+      {/* Correct answer banner */}
       <AnimatePresence>
         {showCorrectAnswer && correctChoice && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+            initial={{ opacity: 0, y: 8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 26 }}
             style={{
-              background: 'linear-gradient(135deg, rgba(34,197,94,0.2) 0%, rgba(16,185,129,0.15) 100%)',
-              border: '1px solid rgba(34,197,94,0.4)',
-              borderRadius: 16,
-              padding: '14px 20px',
+              background: 'rgba(34,197,94,0.1)',
+              border: '1px solid rgba(34,197,94,0.25)',
+              borderRadius: 14,
+              padding: '12px 16px',
               display: 'flex',
               alignItems: 'flex-start',
               gap: 12,
             }}
           >
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: 'spring', stiffness: 500, damping: 15 }}
+              initial={{ scale: 0, rotate: -15 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.15, type: 'spring', stiffness: 500, damping: 18 }}
               style={{
                 flexShrink: 0,
-                width: 32,
-                height: 32,
-                borderRadius: 8,
-                background: '#22C55E',
+                width: 28,
+                height: 28,
+                borderRadius: 7,
+                background: 'rgba(34,197,94,0.8)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                 <path d="M5 13l4 4L19 7" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </motion.div>
             <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#4ADE80', marginBottom: 4, letterSpacing: '0.5px' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#4ADE80', marginBottom: 4, letterSpacing: '0.8px', textTransform: 'uppercase' }}>
                 คำตอบที่ถูกต้อง
               </div>
-              <div style={{ fontSize: 15, fontWeight: 600, color: '#FFFFFF', lineHeight: 1.4 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', lineHeight: 1.45 }}>
                 {CHOICE_LABELS[currentQuestion!.correctIndex]}. {correctChoice}
               </div>
             </div>
@@ -179,132 +203,126 @@ export default function LeaderboardPage({
         )}
       </AnimatePresence>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
+      {/* Player list */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0, overflow: 'hidden' }}>
         {players.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: 'rgba(255,255,255,0.4)', fontSize: 15 }}>
+          <div style={{ textAlign: 'center', padding: '40px 0', color: 'rgba(255,255,255,0.35)', fontSize: 14 }}>
             ไม่มีผู้เล่น
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto', flex: 1 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, overflowY: 'auto', flex: 1 }}>
             <AnimatePresence initial={false}>
-              {players.map((player, index) => (
-                <motion.div
-                  key={player.id}
-                  layout
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 30 }}
-                  transition={{
-                    layout: { type: 'spring', stiffness: 280, damping: 24 },
-                    opacity: { duration: 0.3 },
-                    delay: index * 0.05,
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 14,
-                    background:
-                      index === 0
-                        ? 'linear-gradient(135deg, rgba(245,158,11,0.25) 0%, rgba(251,191,36,0.15) 100%)'
-                        : index === 1
-                        ? 'linear-gradient(135deg, rgba(148,163,184,0.2) 0%, rgba(203,213,225,0.1) 100%)'
-                        : index === 2
-                        ? 'linear-gradient(135deg, rgba(205,124,52,0.2) 0%, rgba(180,100,40,0.1) 100%)'
-                        : 'rgba(255,255,255,0.06)',
-                    border: `1px solid ${
-                      index === 0
-                        ? 'rgba(245,158,11,0.35)'
-                        : index === 1
-                        ? 'rgba(148,163,184,0.25)'
-                        : index === 2
-                        ? 'rgba(205,124,52,0.3)'
-                        : 'rgba(255,255,255,0.1)'
-                    }`,
-                    borderRadius: 16,
-                    padding: '14px 18px',
-                  }}
-                >
+              {players.map((player, index) => {
+                const rank = RANK_CONFIG[index];
+                return (
                   <motion.div
-                    animate={index < 3 ? { scale: [1, 1.1, 1] } : {}}
-                    transition={{ duration: 0.5, delay: index * 0.1 + 0.3 }}
+                    key={player.id}
+                    layout
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{
+                      layout: { type: 'spring', stiffness: 300, damping: 26 },
+                      opacity: { duration: 0.25 },
+                      delay: Math.min(index * 0.04, 0.25),
+                    }}
                     style={{
-                      flexShrink: 0,
-                      width: 38,
-                      height: 38,
-                      borderRadius: 10,
-                      background:
-                        index < 3 ? MEDAL_COLORS[index] : 'rgba(255,255,255,0.1)',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: index < 3 ? 13 : 16,
-                      fontWeight: 800,
-                      color: '#fff',
+                      gap: 12,
+                      background: rank ? rank.bg : 'rgba(255,255,255,0.04)',
+                      border: `1px solid ${rank ? rank.border : 'rgba(255,255,255,0.08)'}`,
+                      borderRadius: 14,
+                      padding: '12px 16px',
                     }}
                   >
-                    {index < 3 ? MEDAL_LABELS[index] : `#${index + 1}`}
-                  </motion.div>
-
-                  <div
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 10,
-                      background: `hsl(${(player.nickname.charCodeAt(0) * 47) % 360}, 60%, 50%)`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 15,
-                      fontWeight: 800,
-                      color: '#fff',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {player.nickname.charAt(0).toUpperCase()}
-                  </div>
-
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
+                    {/* Rank badge */}
+                    <motion.div
+                      animate={index < 3 ? { scale: [1, 1.12, 1] } : {}}
+                      transition={{ duration: 0.45, delay: index * 0.08 + 0.3 }}
                       style={{
-                        fontSize: 15,
-                        fontWeight: 700,
-                        color: '#FFFFFF',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                        width: 36,
+                        height: 36,
+                        borderRadius: 9,
+                        background: rank ? rank.badge : 'rgba(255,255,255,0.08)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: rank ? 12 : 13,
+                        fontWeight: 800,
+                        color: rank ? '#fff' : 'rgba(255,255,255,0.5)',
                       }}
                     >
-                      {player.nickname}
-                    </div>
-                  </div>
+                      {rank ? rank.label : `#${index + 1}`}
+                    </motion.div>
 
-                  <motion.div
-                    key={player.score}
-                    initial={{ scale: 1.3, color: '#60A5FA' }}
-                    animate={{ scale: 1, color: '#fff' }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                    style={{
-                      fontSize: 18,
-                      fontWeight: 800,
-                      color: '#FFFFFF',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {formatScore(player.score)}
+                    {/* Avatar */}
+                    <div
+                      style={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: 9,
+                        background: `hsl(${(player.nickname.charCodeAt(0) * 47) % 360}, 58%, 48%)`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 14,
+                        fontWeight: 800,
+                        color: '#fff',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {player.nickname.charAt(0).toUpperCase()}
+                    </div>
+
+                    {/* Name */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 700,
+                          color: '#fff',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {player.nickname}
+                      </div>
+                    </div>
+
+                    {/* Score */}
+                    <motion.div
+                      key={player.score}
+                      initial={{ scale: 1.2, color: '#818CF8' }}
+                      animate={{ scale: 1, color: '#fff' }}
+                      transition={{ type: 'spring', stiffness: 380, damping: 16 }}
+                      style={{
+                        fontSize: 17,
+                        fontWeight: 800,
+                        color: '#fff',
+                        flexShrink: 0,
+                        fontVariantNumeric: 'tabular-nums',
+                      }}
+                    >
+                      {formatScore(player.score)}
+                    </motion.div>
                   </motion.div>
-                </motion.div>
-              ))}
+                );
+              })}
             </AnimatePresence>
           </div>
         )}
       </div>
 
+      {/* Host controls */}
       {isHost && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          style={{ display: 'flex', gap: 12, paddingBottom: 8 }}
+          transition={{ delay: 0.35, duration: 0.35 }}
+          style={{ display: 'flex', gap: 10, paddingBottom: 8 }}
         >
           {!isLastQuestion ? (
             <>
@@ -315,28 +333,29 @@ export default function LeaderboardPage({
                 fullWidth
                 size="lg"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                {wheelCooldown > 0 ? `ข้อถัดไป (${wheelCooldown})` : 'ข้อถัดไป'}
+                {wheelCooldown > 0 ? `ข้อถัดไป (${wheelCooldown}s)` : 'ข้อถัดไป'}
               </MotionButton>
               <motion.button
                 onClick={handleEndGame}
                 disabled={advancing}
-                whileHover={!advancing ? { scale: 1.03, y: -1 } : {}}
+                whileHover={!advancing ? { scale: 1.02, y: -1 } : {}}
                 whileTap={!advancing ? { scale: 0.97 } : {}}
                 style={{
-                  background: 'rgba(239,68,68,0.2)',
-                  border: '1px solid rgba(239,68,68,0.4)',
+                  background: 'rgba(239,68,68,0.12)',
+                  border: '1px solid rgba(239,68,68,0.3)',
                   borderRadius: 14,
-                  padding: '18px 20px',
+                  padding: '16px 18px',
                   color: '#FCA5A5',
                   fontSize: 14,
                   fontWeight: 700,
                   cursor: advancing ? 'not-allowed' : 'pointer',
-                  opacity: advancing ? 0.6 : 1,
+                  opacity: advancing ? 0.55 : 1,
                   fontFamily: 'inherit',
                   whiteSpace: 'nowrap',
+                  transition: 'background 150ms',
                 }}
               >
                 จบเกม
@@ -351,7 +370,7 @@ export default function LeaderboardPage({
               size="lg"
               variant="danger"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               แสดงผลสรุปสุดท้าย
@@ -360,30 +379,27 @@ export default function LeaderboardPage({
         </motion.div>
       )}
 
+      {/* Player waiting state */}
       {!isHost && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          style={{
-            textAlign: 'center',
-            padding: '12px',
-          }}
+          style={{ textAlign: 'center', padding: '10px 0 8px' }}
         >
           <motion.div
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity }}
+            animate={{ opacity: [0.45, 1, 0.45] }}
+            transition={{ duration: 2.2, repeat: Infinity }}
             style={{
-              fontSize: 14,
-              color: 'rgba(255,255,255,0.5)',
+              fontSize: 13,
+              color: 'rgba(255,255,255,0.4)',
               fontWeight: 600,
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
+              gap: 7,
             }}
           >
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E' }} />
+            <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22C55E' }} />
             รอผู้จัดข้อถัดไป...
           </motion.div>
         </motion.div>
