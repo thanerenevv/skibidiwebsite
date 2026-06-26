@@ -18,7 +18,7 @@ export default function CountdownTimer({
 
   useEffect(() => {
     const tick = () => {
-      const elapsed = (Date.now() - questionStartTime) / 1000;
+      const elapsed = Math.max(0, (Date.now() - questionStartTime) / 1000);
       const left = Math.max(0, durationSeconds - elapsed);
       setRemaining(left);
       if (left <= 0) {

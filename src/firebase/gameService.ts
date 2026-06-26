@@ -110,7 +110,7 @@ export async function startGame(gameCode: string): Promise<void> {
     updateDoc(gameRef(gameCode), {
       status: 'question' as GameStatus,
       currentQuestionIndex: 0,
-      questionStartTime: Date.now(),
+      questionStartTime: Date.now() + 5000,
     }),
     10000,
   );
@@ -132,7 +132,7 @@ export async function nextQuestion(gameCode: string, currentIndex: number): Prom
     await updateDoc(gameRef(gameCode), {
       status: 'question' as GameStatus,
       currentQuestionIndex: nextIndex,
-      questionStartTime: Date.now(),
+      questionStartTime: Date.now() + 5000,
     });
   }
 }
@@ -153,7 +153,7 @@ export async function submitAnswer(
 ): Promise<{ isCorrect: boolean; pointsEarned: number }> {
   const question = QUESTIONS[questionIndex];
   const isCorrect = choiceIndex === question.correctIndex;
-  const elapsedMs = Date.now() - questionStartTime;
+  const elapsedMs = Math.max(0, Date.now() - questionStartTime);
   const durationMs = questionDurationSeconds * 1000;
   const pointsEarned = calculatePoints(isCorrect, elapsedMs, durationMs);
 
