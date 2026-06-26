@@ -148,9 +148,7 @@ export default function HomePage({
               marginBottom: 14,
               textTransform: "uppercase",
             }}
-          >
-            Quiz Game
-          </motion.div>
+          ></motion.div>
 
           <h1
             style={{
